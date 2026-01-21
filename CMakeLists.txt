@@ -13,7 +13,15 @@ include_directories(vendor/glad/include)
 add_library(GLAD vendor/glad/src/glad.c)
 
 # Source Files
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES "Source Files/main.cpp"
+        "Header Files/VBO.h"
+        "Source Files/VBO.cpp"
+        "Header Files/VAO.h"
+        "Header Files/EBO.h"
+        "Source Files/VAO.cpp"
+        "Source Files/EBO.cpp"
+        "Source Files/shaderClass.cpp"
+)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
