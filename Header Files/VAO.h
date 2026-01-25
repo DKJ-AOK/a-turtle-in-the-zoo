@@ -1,7 +1,7 @@
 ﻿#ifndef A_TURTLE_IN_THE_ZOO_VAO_H
 #define A_TURTLE_IN_THE_ZOO_VAO_H
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include "../Header Files/VBO.h"
 
 class VAO {

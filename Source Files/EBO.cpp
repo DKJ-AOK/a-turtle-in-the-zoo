@@ -1,5 +1,7 @@
 ﻿#include "../Header Files/EBO.h"
 
+#include <glad/gl.h>
+
 EBO::EBO(const GLuint *indices, const GLsizeiptr size) {
     // Generate the EBO with only 1 object each
     glGenBuffers(1, &ID);

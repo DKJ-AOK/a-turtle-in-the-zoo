@@ -4,13 +4,13 @@ namespace fs = std::filesystem;
 //------------------------------
 
 #include<iostream>
-#include<glad/glad.h>
+#include<glad/gl.h>
 #include<GLFW/glfw3.h>
 
-#include"../vendor/glm/glm.hpp"
-#include"../vendor/glm/gtc/matrix_transform.hpp"
-#include"../vendor/glm/gtc/type_ptr.hpp"
-#include "../vendor/stb/stb_image.h"
+#include<glm/glm.hpp>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
+#include<stb_image.h>
 #include"../Header Files/Texture.h"
 #include"../Header Files/shaderClass.h"
 #include"../Header Files/VAO.h"
@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 
 const unsigned int width = 800;
-const unsigned int height = 600;
+const unsigned int height = 800;
 
 
 // Vertices coordinates
@@ -71,7 +71,10 @@ int main()
 	glfwMakeContextCurrent(window);
 
 	//Load GLAD so it configures OpenGL
-	gladLoadGL();
+	if (!gladLoadGL(glfwGetProcAddress)) {
+		// Handle error: Failed to initialize GLAD
+		return -1;
+	}
 	// Specify the viewport of OpenGL in the Window
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, width, height);

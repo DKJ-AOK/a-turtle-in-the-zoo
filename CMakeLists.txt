@@ -5,15 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# GLFW
-add_subdirectory(vendor/glfw-3.4)
-
-# GLM
-add_subdirectory(vendor/glm)
-
-# GLAD
-include_directories(vendor/glad/include)
-add_library(GLAD vendor/glad/src/glad.c)
+find_package(glfw3 REQUIRED)
+find_package(glad CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(stb CONFIG REQUIRED)
 
 # Source Files
 set(SOURCE_FILES "Source Files/main.cpp"
@@ -25,13 +20,15 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/EBO.cpp"
         "Source Files/shaderClass.cpp"
         "Source Files/stb.cpp"
-        "vendor/stb/stb_image.h"
         "Header Files/Texture.h"
         "Source Files/Texture.cpp"
-        "Header Files/Camera.h"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} glfw GLAD)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        glfw           # GLFW is sometimes just 'glfw' or 'glfw3' depending on the package
+        glad::glad
+        glm::glm
+        stb::stb)

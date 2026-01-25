@@ -1,7 +1,7 @@
 ﻿#ifndef A_TURTLE_IN_THE_ZOO_VBO_H
 #define A_TURTLE_IN_THE_ZOO_VBO_H
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 class VBO {
     public:
