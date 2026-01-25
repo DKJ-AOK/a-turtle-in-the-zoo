@@ -8,6 +8,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # GLFW
 add_subdirectory(vendor/glfw-3.4)
 
+# GLM
+add_subdirectory(vendor/glm)
+
 # GLAD
 include_directories(vendor/glad/include)
 add_library(GLAD vendor/glad/src/glad.c)
@@ -21,6 +24,11 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/VAO.cpp"
         "Source Files/EBO.cpp"
         "Source Files/shaderClass.cpp"
+        "Source Files/stb.cpp"
+        "vendor/stb/stb_image.h"
+        "Header Files/Texture.h"
+        "Source Files/Texture.cpp"
+        "Header Files/Camera.h"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
