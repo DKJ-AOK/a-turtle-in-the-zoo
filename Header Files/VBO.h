@@ -1,12 +1,21 @@
 ﻿#ifndef A_TURTLE_IN_THE_ZOO_VBO_H
 #define A_TURTLE_IN_THE_ZOO_VBO_H
 
+#include <vector>
 #include <glad/gl.h>
+#include <glm/glm.hpp>
+
+struct Vertex {
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec3 color;
+    glm::vec2 texUV;
+};
 
 class VBO {
     public:
         GLuint ID{};
-    VBO(const GLfloat* vertices, GLsizeiptr size);
+    VBO(const std::vector<Vertex>& vertices);
 
     void Bind() const;
     void Unbind() const;

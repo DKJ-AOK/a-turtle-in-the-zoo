@@ -2,13 +2,13 @@
 
 #include <glad/gl.h>
 
-EBO::EBO(const GLuint *indices, const GLsizeiptr size) {
+EBO::EBO(const std::vector<GLuint> &indices) {
     // Generate the EBO with only 1 object each
     glGenBuffers(1, &ID);
     // Bind the EBO specifying it's a GL_ARRAY_BUFFER
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
     // Introduce the vertices into the EBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 }
 
 void EBO::Bind() const {
