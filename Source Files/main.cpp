@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 #include"../Header Files/VAO.h"
 #include"../Header Files/VBO.h"
 #include"../Header Files/EBO.h"
+#include"../Header Files/Camera.h"
 
 
 const unsigned int width = 800;
@@ -104,20 +105,17 @@ int main()
 	VBO1.Unbind();
 	EBO1.Unbind();
 
-	// Gets ID of uniform called "scale"
-	GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
-
 	// Texture
 	Texture popCat("../pop_cat.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	popCat.texUnit(shaderProgram, "tex0", 0);
-	float rotation = 0.0f;
-	double prevTime = glfwGetTime();
 
 	glEnable(GL_DEPTH_TEST);
 
 	// Original code from the tutorial
 	/*Texture popCat("pop_cat.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	popCat.texUnit(shaderProgram, "tex0", 0);*/
+
+	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -129,29 +127,9 @@ int main()
 		// Tell OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
-		double currentTime = glfwGetTime();
-		if (currentTime - prevTime >= 1 / 60) {
-			rotation += 0.5f;
-			prevTime = currentTime;
-		}
+		camera.Inputs(window);
+		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
 
-		auto model = glm::mat4(1.0f);
-		auto view = glm::mat4(1.0f);
-		auto proj = glm::mat4(1.0f);
-
-		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
-		proj = glm::perspective(glm::radians(45.0f), static_cast<float>(width / height), 0.1f, 100.0f);
-
-		int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-		// Assigns a value to the uniform; NOTE: Must always be done after activating the Shader Program
-		glUniform1f(uniID, 0.5f);
 		// Binds texture so that is appears in rendering
 		popCat.Bind();
 		// Bind the VAO so OpenGL knows to use it

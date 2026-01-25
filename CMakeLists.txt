@@ -22,6 +22,8 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/stb.cpp"
         "Header Files/Texture.h"
         "Source Files/Texture.cpp"
+        "Header Files/Camera.h"
+        "Source Files/Camera.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
