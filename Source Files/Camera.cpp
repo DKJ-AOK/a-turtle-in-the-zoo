@@ -58,7 +58,7 @@ void Camera::Inputs(GLFWwindow *window) {
         // Prevents camera from jumping on the first click
         if (firstClick)
         {
-            glfwSetCursorPos(window, (width / 2), (height / 2));
+            glfwSetCursorPos(window, width / 2, height / 2);
             firstClick = false;
         }
 
