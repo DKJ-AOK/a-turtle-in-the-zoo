@@ -6,14 +6,23 @@ Camera::Camera(int width, int height, glm::vec3 position) {
     Position = position;
 }
 
-void Camera::Matrix(float FOV, float nearPlane, float farPlane, Shader &shader, const char *uniform) {
+void Camera::UpdateMatrix(float FOV, float nearPlane, float farPlane) {
+    // Initializes matrices since otherwise they will be the null matrix
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
 
+    // Makes camera look in the right direction from the right position
     view = glm::lookAt(Position, Position + Orientation, Up);
-    projection = glm::perspective(glm::radians(FOV), static_cast<float>(width / height), nearPlane, farPlane);
+    // Adds perspective to the scene
+    projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, nearPlane, farPlane);
 
-    glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
+    // Sets new camera matrix
+    cameraMatrix = projection * view;
+}
+
+void Camera::Matrix(Shader &shader, const char *uniform) {
+    // Exports camera matrix
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
 }
 
 void Camera::Inputs(GLFWwindow *window) {
@@ -29,10 +38,10 @@ void Camera::Inputs(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         Position += speed * glm::normalize(glm::cross(Orientation, Up));
     }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
         Position += speed * Up;
     }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         Position += speed * -Up;
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
