@@ -20,7 +20,7 @@ const unsigned int height = 800;
 
 // Vertices coordinates
 Vertex vertices[] =
-{ //               COORDINATES                            /              COLORS                 /               NORMALS                 /       TEXTURE COORDINATES       //
+{ //               COORDINATES                            /              NORMALS                /               COLORS                  /       TEXTURE COORDINATES       //
 	Vertex{glm::vec3(-1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
 	Vertex{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
 	Vertex{glm::vec3( 1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
@@ -32,6 +32,76 @@ GLuint indices[] =
 {
 	0, 1, 2,
 	0, 2, 3
+};
+
+Vertex blockVertices[] =
+{
+    // COORDINATES (vec3)           / NORMALS (vec3)      / COLORS (vec3)       / UVs (vec2)
+
+    // --- TOP FACE (Green: U from 0.0 to 0.33) ---
+    Vertex{glm::vec3(-0.2f,  0.2f,  0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.000f, 0.0f)},
+    Vertex{glm::vec3(-0.2f,  0.2f, -0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.000f, 1.0f)},
+    Vertex{glm::vec3( 0.2f,  0.2f, -0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 1.0f)},
+    Vertex{glm::vec3( 0.2f,  0.2f,  0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 0.0f)},
+
+    // --- BOTTOM FACE (Brown: U from 0.66 to 1.0) ---
+    Vertex{glm::vec3(-0.2f, -0.2f, -0.2f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.67f, 0.0f)},
+    Vertex{glm::vec3(-0.2f, -0.2f,  0.2f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.67f, 1.0f)},
+    Vertex{glm::vec3( 0.2f, -0.2f,  0.2f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.000f, 1.0f)},
+    Vertex{glm::vec3( 0.2f, -0.2f, -0.2f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.000f, 0.0f)},
+
+    // --- SIDE FACES (Grass/Dirt Mix: U from 0.33 to 0.66) ---
+
+    // FRONT
+    Vertex{glm::vec3(-0.2f, -0.2f,  0.2f), glm::vec3(0.0f, 0.0f, 1.0f),  glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 0.0f)},
+    Vertex{glm::vec3( 0.2f, -0.2f,  0.2f), glm::vec3(0.0f, 0.0f, 1.0f),  glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 0.0f)},
+    Vertex{glm::vec3( 0.2f,  0.2f,  0.2f), glm::vec3(0.0f, 0.0f, 1.0f),  glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 1.0f)},
+    Vertex{glm::vec3(-0.2f,  0.2f,  0.2f), glm::vec3(0.0f, 0.0f, 1.0f),  glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 1.0f)},
+
+    // BACK
+    Vertex{glm::vec3( 0.2f, -0.2f, -0.2f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 0.0f)},
+    Vertex{glm::vec3(-0.2f, -0.2f, -0.2f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 0.0f)},
+    Vertex{glm::vec3(-0.2f,  0.2f, -0.2f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 1.0f)},
+    Vertex{glm::vec3( 0.2f,  0.2f, -0.2f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 1.0f)},
+
+    // LEFT
+    Vertex{glm::vec3(-0.2f, -0.2f, -0.2f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 0.0f)},
+    Vertex{glm::vec3(-0.2f, -0.2f,  0.2f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 0.0f)},
+    Vertex{glm::vec3(-0.2f,  0.2f,  0.2f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 1.0f)},
+    Vertex{glm::vec3(-0.2f,  0.2f, -0.2f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 1.0f)},
+
+    // RIGHT
+    Vertex{glm::vec3( 0.2f, -0.2f,  0.2f), glm::vec3( 1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 0.0f)},
+    Vertex{glm::vec3( 0.2f, -0.2f, -0.2f), glm::vec3( 1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 0.0f)},
+    Vertex{glm::vec3( 0.2f,  0.2f, -0.2f), glm::vec3( 1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.66f, 1.0f)},
+    Vertex{glm::vec3( 0.2f,  0.2f,  0.2f), glm::vec3( 1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.34f, 1.0f)}
+};
+
+GLuint blockIndices[] =
+{
+	// --- TOP FACE ---
+	0, 1, 2,     // First Triangle
+	0, 2, 3,     // Second Triangle
+
+	// --- BOTTOM FACE ---
+	4, 5, 6,     // First Triangle
+	4, 6, 7,     // Second Triangle
+
+	// --- FRONT FACE ---
+	8, 9, 10,    // First Triangle
+	8, 10, 11,   // Second Triangle
+
+	// --- BACK FACE ---
+	12, 13, 14,  // First Triangle
+	12, 14, 15,  // Second Triangle
+
+	// --- LEFT FACE ---
+	16, 17, 18,  // First Triangle
+	16, 18, 19,  // Second Triangle
+
+	// --- RIGHT FACE ---
+	20, 21, 22,  // First Triangle
+	20, 22, 23   // Second Triangle
 };
 
 Vertex lightVertices[] =
@@ -112,6 +182,14 @@ int main()
 	// Create floor mesh
 	Mesh floor(verts, ind, tex);
 
+	Texture blockTextures[] {
+		Texture("../DirtBlock.png", "diffuse", 0, GL_RGB, GL_UNSIGNED_BYTE),
+	};
+
+	std::vector blockVerts(blockVertices, blockVertices + sizeof(blockVertices) / sizeof(Vertex));
+	std::vector blockInds(blockIndices, blockIndices + sizeof(blockIndices) / sizeof(GLuint));
+	std::vector blockTex(blockTextures, blockTextures + sizeof(blockTextures) / sizeof(Texture));
+	Mesh dirtBlock(blockVerts, blockInds, blockTex);
 
 	// Shader for light cube
 	Shader lightShader("../Resource Files/Shaders/light.vert", "../Resource Files/Shaders/light.frag");
@@ -132,6 +210,10 @@ int main()
 	auto pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
 	auto pyramidModel = glm::mat4(1.0f);
 	pyramidModel = glm::translate(pyramidModel, pyramidPos);
+
+	auto blockPos = glm::vec3(-0.5f, 0.3f, -0.5f);
+	auto blockModel = glm::mat4(1.0f);
+	blockModel = glm::translate(blockModel, blockPos);
 
 	lightShader.Activate();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
@@ -163,9 +245,21 @@ int main()
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 
+		// --- DRAW THE FLOOR ---
+		shaderProgram.Activate();
+		// Re-send floor model matrix in case it changed (or just to be safe)
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+		floor.Draw(shaderProgram, camera);
+
+		// --- DRAW THE DIRT BLOCK ---
+		// 1. We stay in shaderProgram.Activate()
+		// 2. Update the "model" uniform to the block's specific matrix
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(blockModel));
+		// 3. Trigger the draw call
+		dirtBlock.Draw(shaderProgram, camera);
 
 		// Draws different meshes
-		floor.Draw(shaderProgram, camera);
+		//floor.Draw(shaderProgram, camera);
 		light.Draw(lightShader, camera);
 
 
