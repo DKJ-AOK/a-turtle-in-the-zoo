@@ -64,7 +64,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create a GLFWwindow object of 800 by 800 pixels, naming it "YoutubeOpenGL"
-	GLFWwindow* window = glfwCreateWindow(width, height, "YoutubeOpenGL", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(width, height, "Scuffed minecraft", nullptr, nullptr);
 	// Error check if the window fails to create
 	if (window == nullptr)
 	{
