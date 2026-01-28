@@ -16,6 +16,7 @@ class VBO {
     public:
         GLuint ID{};
     VBO(const std::vector<Vertex>& vertices);
+    VBO(const std::vector<glm::mat4>& matrices);
 
     void Bind() const;
     void Unbind() const;

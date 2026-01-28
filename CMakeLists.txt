@@ -9,6 +9,7 @@ find_package(glfw3 REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(stb CONFIG REQUIRED)
+find_package(PerlinNoise)
 
 # Source Files
 set(SOURCE_FILES "Source Files/main.cpp"
@@ -26,6 +27,8 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/Camera.cpp"
         "Header Files/Mesh.h"
         "Source Files/Mesh.cpp"
+        "Header Files/Chunk.h"
+        "Source Files/Chunk.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
@@ -35,4 +38,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         glfw           # GLFW is sometimes just 'glfw' or 'glfw3' depending on the package
         glad::glad
         glm::glm
-        stb::stb)
+        stb::stb
+        siv::PerlinNoise)

@@ -19,7 +19,6 @@ public:
     Mesh(const std::vector <Vertex>& vertices, const std::vector <GLuint>& indices, const std::vector<Texture>& textures);
 
     void Draw(Shader &shader, Camera &camera);
-
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_MESH_H

@@ -2,6 +2,7 @@
 # To keep your changes, remove these comment lines, but the plugin won't be able to modify your requirements
 
 requirements:
+  - "perlinnoise/3.0.0"
   - "stb/cci.20240531"
   - "glm/1.0.1"
   - "glfw/3.3.8"

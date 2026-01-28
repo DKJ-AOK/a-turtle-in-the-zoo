@@ -8,6 +8,8 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aColor;
 // Texture Coordinates
 layout (location = 3) in vec2 aTex;
+// Instance Matrix
+layout (location = 4) in mat4 instanceMatrix;
 
 
 // Outputs the current position for the Fragment Shader
@@ -25,12 +27,16 @@ out vec2 texCoord;
 uniform mat4 camMatrix;
 // Imports the model matrix from the main function
 uniform mat4 model;
+// Bool to use instancing or not
+uniform bool useInstancing;
 
 
 void main()
 {
+    mat4 finalModel = useInstancing ? instanceMatrix : model;
+
     // calculates current position
-    crntPos = vec3(model * vec4(aPos, 1.0f));
+    crntPos = vec3(finalModel * vec4(aPos, 1.0f));
     // Assigns the normal from the Vertex Data to "Normal"
     Normal = aNormal;
     // Assigns the colors from the Vertex Data to "color"
