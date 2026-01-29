@@ -19,7 +19,7 @@ public:
     [[nodiscard]] int getRenderDistance() const { return renderDistance; }
 
     void addBlock(glm::ivec3 pos, BlockType type);
-    void removeBlock(glm::ivec3 pos);
+    BlockType removeBlock(glm::ivec3 pos);
 
 private:
     std::map<std::pair<int, int>, ChunkData> chunks;

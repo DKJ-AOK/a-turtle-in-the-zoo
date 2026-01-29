@@ -60,6 +60,9 @@ void World::addBlock(const glm::ivec3 pos, const BlockType type) {
     chunkData.isModified = true;
 }
 
-void World::removeBlock(glm::ivec3 pos) {
+BlockType World::removeBlock(glm::ivec3 pos) {
+    auto chunkPos = glm::ivec2(std::floor(pos.x / 16.0f), std::floor(pos.z / 16.0f));
+    auto blockType = chunks[{chunkPos.x, chunkPos.y}].chunk->blocks[pos.x % 16][pos.y][pos.z % 16];
     addBlock(pos, AIR);
+    return blockType;
 }
