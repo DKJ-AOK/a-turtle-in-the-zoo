@@ -14,6 +14,8 @@ enum Action {
     MOVE_LEFT,
     MOVE_RIGHT,
     JUMP,
+    WALK,
+    SPRINT,
     INTERACT,
     HIT,
     PLACE,

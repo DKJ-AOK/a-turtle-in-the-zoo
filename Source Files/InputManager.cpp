@@ -14,6 +14,7 @@ InputManager::InputManager(double screenWidth, double screenHeight) {
     bindKey(MOVE_BACKWARD, KEYBOARD, GLFW_KEY_S);
     bindKey(MOVE_LEFT, KEYBOARD, GLFW_KEY_A);
     bindKey(MOVE_RIGHT, KEYBOARD, GLFW_KEY_D);
+    bindKey(SPRINT, KEYBOARD, GLFW_KEY_LEFT_SHIFT);
     bindKey(JUMP, KEYBOARD, GLFW_KEY_SPACE);
     bindKey(INTERACT, KEYBOARD, GLFW_KEY_F);
     bindKey(HIT, MOUSE_BUTTON, GLFW_MOUSE_BUTTON_LEFT);

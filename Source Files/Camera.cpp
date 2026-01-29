@@ -65,6 +65,10 @@ void Camera::HandleMovement(Action action, float deltaTime) {
         Position -= Right * velocity;
     if (action == Action::MOVE_RIGHT)
         Position += Right * velocity;
+    if (action == Action::SPRINT)
+        Speed = SprintSpeed;
+    if (action == Action::WALK)
+        Speed = WalkSpeed;
 }
 
 // void Camera::Inputs(GLFWwindow *window) {
