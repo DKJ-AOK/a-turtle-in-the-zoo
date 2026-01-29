@@ -125,18 +125,63 @@ int main() {
 	Camera camera(screenWidth, screenHeight, glm::vec3(0.0f, 2.0f, 5.0f));
 	InputManager inputManager(screenWidth, screenHeight);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	float deltaTime = 0.0f;
+	float lastFrame = 0.0f;
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		// Updates State of Keybindings
+		inputManager.update(window);
+		camera.HandleRotation(inputManager.getMouseDeltaX(), inputManager.getMouseDeltaY());
+
+		if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
+			std::cout << "Move Forward" << std::endl;
+			camera.HandleMovement(MOVE_FORWARD, deltaTime);
+		}
+
+		if (inputManager.isActionActive(Action::MOVE_BACKWARD)) {
+			std::cout << "Move Backward" << std::endl;
+			camera.HandleMovement(MOVE_BACKWARD, deltaTime);
+		}
+
+		if (inputManager.isActionActive(Action::MOVE_LEFT)) {
+			std::cout << "Move Left" << std::endl;
+			camera.HandleMovement(MOVE_LEFT, deltaTime);
+		}
+
+		if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
+			std::cout << "Move Right" << std::endl;
+			camera.HandleMovement(MOVE_RIGHT, deltaTime);
+		}
+
+		if (inputManager.isActionJustPressed(Action::JUMP))
+			std::cout << "Jump" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::HIT))
+			std::cout << "Hit" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::PLACE))
+			std::cout << "Place" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::INTERACT))
+			std::cout << "Interact" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::EXIT_GAME)) {
+			std::cout << "Exit Game" << std::endl;
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		}
+
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Updates State of Keybindings
-		inputManager.update(window);
-		// Handles camera inputs
-		// camera.Inputs(window);
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 
@@ -147,38 +192,6 @@ int main() {
 
 		world.draw(shaderProgram, camera);
 		light.Draw(lightShader, camera);
-
-		if (inputManager.isActionJustPressed(Action::MOVE_FORWARD))
-			std::cout << "Move Forward" << std::endl;
-
-		if (inputManager.isActionJustPressed(Action::MOVE_BACKWARD))
-			std::cout << "Move Backward" << std::endl;
-
-		if (inputManager.isActionJustPressed(Action::MOVE_LEFT))
-			std::cout << "Move Left" << std::endl;
-
-		if (inputManager.isActionJustPressed(Action::MOVE_RIGHT))
-			std::cout << "Move Right" << std::endl;
-
-		if (inputManager.isActionJustPressed(Action::JUMP))
-			std::cout << "Jump" << std::endl;
-
-		if (inputManager.isActionActive(Action::HIT))
-			std::cout << "Hit" << std::endl;
-
-		if (inputManager.isActionJustPressed(Action::PLACE))
-			std::cout << "Place" << std::endl;
-
-		if (inputManager.isActionJustPressed(Action::INTERACT))
-			std::cout << "Interact" << std::endl;
-
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-			camera.Inputs(window);
-
-		if (inputManager.isActionJustPressed(Action::EXIT_GAME)) {
-			std::cout << "Exit Game" << std::endl;
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-		}
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
