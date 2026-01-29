@@ -6,11 +6,23 @@
 #include <PerlinNoise.hpp>
 #include "Mesh.h"
 
+class Chunk;
+
 enum BlockType {
     AIR = 0,
     GRASS = 1,
     DIRT = 2,
     STONE = 3
+};
+
+struct ChunkData {
+    Chunk* chunk;    // Pointer to the Chunk object (contains block data)
+    Mesh* mesh;      // Pointer to the Mesh object (used for rendering)
+    bool isModified; // Optional: true if the user changed blocks (useful for saving to disk)
+
+    // Constructor for convenience
+    ChunkData(Chunk* c = nullptr, Mesh* m = nullptr)
+        : chunk(c), mesh(m), isModified(false) {}
 };
 
 class Chunk {

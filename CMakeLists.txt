@@ -29,6 +29,8 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/Mesh.cpp"
         "Header Files/Chunk.h"
         "Source Files/Chunk.cpp"
+        "Header Files/World.h"
+        "Source Files/World.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

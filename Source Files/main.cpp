@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 #include<glm/gtc/type_ptr.hpp>
 #include<stb_image.h>
 #include"../Header Files/Mesh.h"
-#include"../Header Files/Chunk.h"
+#include"../Header Files/World.h"
 
 
 const unsigned int width = 1600;
@@ -92,24 +92,7 @@ int main() {
 	std::vector blockTex(blockTextures, blockTextures + sizeof(blockTextures) / sizeof(Texture));
 
 	auto seed = generateSeed();
-
-	std::vector<Chunk> chunks;
-	std::vector<Mesh*> chunkMeshes;
-
-	auto gridSize = 16;
-	for (int x = -gridSize / 2; x <= gridSize / 2; x++) {
-		for (int z = -gridSize / 2; z <= gridSize / 2; z++) {
-			// Create chunk at world position (x, 0, z)
-			// Note: Chunk position is in "chunk units", internal logic handles block coordinates
-			chunks.emplace_back(glm::vec3(x, 0, z), seed);
-
-			// Generate the mesh for the newly added chunk
-			chunkMeshes.emplace_back(chunks.back().generateMesh(blockTex));
-		}
-	}
-
-	//Chunk chunk(glm::ivec3(0, 0, 0), generateSeed());
-	//Mesh* chunkMesh = chunk.generateMesh(blockTex);
+	World world(seed);
 
 	// Shader for light cube
 	Shader lightShader("../Resource Files/Shaders/light.vert", "../Resource Files/Shaders/light.frag");
@@ -153,16 +136,12 @@ int main() {
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 
+		world.updateChunks(camera.Position, blockTex);
+
 		// Draws different meshes
 		shaderProgram.Activate();
-		glUniform1i(glGetUniformLocation(shaderProgram.ID, "useInstancing"), 0);
-		glm::mat4 model = glm::mat4(1.0f);
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-		//chunkMesh->Draw(shaderProgram, camera);
-		for (Mesh* mesh : chunkMeshes) {
-			mesh -> Draw(shaderProgram, camera);
-		}
+		world.draw(shaderProgram, camera);
 		light.Draw(lightShader, camera);
 
 		// Swap the back buffer with the front buffer
@@ -171,11 +150,6 @@ int main() {
 		glfwPollEvents();
 	}
 
-	//delete chunkMesh;
-	for (Mesh* mesh : chunkMeshes) {
-		delete mesh;
-	}
-	chunkMeshes.clear();
 	// Delete all the objects we've created
 	shaderProgram.Delete();
 	lightShader.Delete();
