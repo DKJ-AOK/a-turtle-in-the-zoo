@@ -14,6 +14,12 @@ enum BlockType {
     SAND = 4
 };
 
+enum Biome {
+    PLANES = 0,
+    DESSERT = 1,
+
+};
+
 struct UVRect {
     float uStart, uEnd, vStart, vEnd;
 };
@@ -26,14 +32,17 @@ public:
     glm::ivec3 position;
 
     explicit Chunk(glm::ivec3 pos, std::uint32_t seed = 0);
-    Mesh* generateMesh(const std::vector<Texture>& textures) const;
+    [[nodiscard]] Mesh* generateMesh(const std::vector<Texture>& textures) const;
 
     void addBlockAtWorldPosition(glm::ivec3 pos, BlockType type);
-    BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
+    [[nodiscard]] BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
 
 private:
     static void addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType type);
     static UVRect getUVs(int column, int row);
+
+    [[nodiscard]] int getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome biome) const;
+    [[nodiscard]] Biome getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) const;
 };
 
 struct ChunkData {

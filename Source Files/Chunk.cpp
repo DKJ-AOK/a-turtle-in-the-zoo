@@ -1,34 +1,32 @@
 ﻿#include "../Header Files/Chunk.h"
 
 Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
-    // Initialize the Perlin Noise object with a seed
-    static const siv::PerlinNoise perlin{ seed };
-
-    const float frequency = 0.025f; // Lower values = smoother hills
-    const int octaves = 4;         // More octaves = more detail/jaggedness
-    const int surfaceHeight = 20;   // Base height
-
     for (int x = 0; x < SIZE_X_Z; x++) {
         for (int z = 0; z < SIZE_X_Z; z++) {
             // Calculate world coordinates
-            auto worldX = static_cast<double>(pos.x * SIZE_X_Z + x);
-            auto worldZ = static_cast<double>(pos.z * SIZE_X_Z + z);
+            const auto worldX = static_cast<double>(pos.x * SIZE_X_Z + x);
+            const auto worldZ = static_cast<double>(pos.z * SIZE_X_Z + z);
 
-            // Generate noise value between 0.0 and 1.0
-            // octave2D_01 handles multiple layers of noise for you
-            double noise = perlin.octave2D_01(worldX * frequency, worldZ * frequency, octaves);
+            const auto biome = getBiomeAtWorldPosition(glm::ivec2(worldX, worldZ), seed);
 
             // Map to height
-            auto height = surfaceHeight + static_cast<int>(noise * surfaceHeight);
+            const auto height = getNoiseHeightAtWorldPosition(glm::ivec2(worldX, worldZ), seed, biome);
 
             for (int y = 0; y < SIZE_Y; y++) {
                 if (y < height - 10) {
                     blocks[x][y][z] = STONE;
-                } else if (y < height) {
-                    blocks[x][y][z] = DIRT;
-                } else if (y == height) {
-                    blocks[x][y][z] = GRASS;
-                } else {
+                }
+                if (biome == PLANES) {
+                    if (y < height) {
+                        blocks[x][y][z] = DIRT;
+                    } else if (y == height) {
+                        blocks[x][y][z] = GRASS;
+                    }
+                }
+                else if (biome == DESSERT && y <= height) {
+                    blocks[x][y][z] = SAND;
+                }
+                else {
                     blocks[x][y][z] = AIR;
                 }
             }
@@ -36,10 +34,59 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
     }
 }
 
+int Chunk::getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome biome) const {
+    // Initialize the Perlin Noise object with a seed
+    static const siv::PerlinNoise perlin{ seed };
+
+    float frequency;     // Lower values = smoother hills
+    int octaves;         // More octaves = more detail/jaggedness
+    int surfaceHeight;   // Base height
+
+    switch (biome) {
+        case PLANES:
+        case DESSERT:
+            frequency = 0.025f;
+            octaves = 4;
+            surfaceHeight = 20;
+            break;
+        default:
+            frequency = 0.0f;
+            octaves = 1;
+            surfaceHeight = 0;
+            break;
+    }
+
+    // Generate noise value between 0.0 and 1.0
+    // octave2D_01 handles multiple layers of noise for you
+    const double noise = perlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves);
+
+    // Map to height
+    return surfaceHeight + static_cast<int>(noise * surfaceHeight);
+}
+
+Biome Chunk::getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) const {
+    const float frequency = 0.005f;     // Lower values = smoother hills
+    const int octaves = 8;             // More octaves = more detail/jaggedness
+
+    std::mt19937 rng{seed};
+    const uint32_t humiditySeed = rng();
+    const uint32_t temperatureSeed = rng();
+
+    static const siv::PerlinNoise humidityPerlin{ humiditySeed };
+    static const siv::PerlinNoise temperaturePerlin{ temperatureSeed };
+
+    if (humidityPerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves) <= 0.3f &&
+        temperaturePerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves) >= 0.7f) {
+        return DESSERT;
+    }
+
+    return PLANES;
+}
+
 void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, const glm::vec3 pos, const int faceDir, const BlockType type) {
-    float size = 0.4f; // Based on main.cpp model translation
-    glm::vec3 p = pos * size;
-    float s = size / 2.0f;
+    constexpr float size = 0.4f; // Based on main.cpp model translation
+    const glm::vec3 p = pos * size;
+    constexpr float s = size / 2.0f;
     
     UVRect uv = getUVs(15, 15);
 
