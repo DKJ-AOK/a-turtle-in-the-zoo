@@ -19,20 +19,34 @@ enum Action {
     PLACE,
 };
 
+enum InputType {
+    KEYBOARD,
+    MOUSE_BUTTON,
+};
+
+struct InputBinding {
+    InputType type;
+    int id;
+
+    bool operator<(const InputBinding& other) const {
+        if (type != other.type) return type < other.type;
+        return id < other.id;
+    }
+};
+
 class InputManager {
 private:
-    std::map<Action, std::vector<int>> keyBindings;
-    std::map<int, bool> currentKeyState;
-    std::map<int, bool> previousKeyState;
+    std::map<Action, std::vector<InputBinding>> keyBindings;
+    std::map<InputBinding, bool> currentKeyStates;
+    std::map<InputBinding, bool> previousKeyStates;
 
 public:
     InputManager();
 
     bool isActionActive(Action action);
     bool isActionJustPressed(Action action);
-    void unbindKey(Action action, int keyCode);
     void unbindAllKeyBindings(Action action);
-    void bindKey(Action action, int keyCode);
+    void bindKey(Action action, InputType inputType, int keyCode);
     void update(GLFWwindow* window);
 };
 

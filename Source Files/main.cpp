@@ -13,6 +13,7 @@ namespace fs = std::filesystem;
 #include<stb_image.h>
 #include"../Header Files/Mesh.h"
 #include"../Header Files/World.h"
+#include"../Header Files/InputManager.h"
 
 
 const unsigned int width = 1600;
@@ -122,6 +123,7 @@ int main() {
 	popCat.texUnit(shaderProgram, "tex0", 0);*/
 
 	Camera camera(width, height, glm::vec3(0.0f, 2.0f, 5.0f));
+	InputManager inputManager;
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -131,8 +133,10 @@ int main() {
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Updates State of Keybindings
+		inputManager.update(window);
 		// Handles camera inputs
-		camera.Inputs(window);
+		// camera.Inputs(window);
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 
@@ -143,6 +147,33 @@ int main() {
 
 		world.draw(shaderProgram, camera);
 		light.Draw(lightShader, camera);
+
+		if (inputManager.isActionJustPressed(Action::MOVE_FORWARD))
+			std::cout << "Move Forward" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::MOVE_BACKWARD))
+			std::cout << "Move Backward" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::MOVE_LEFT))
+			std::cout << "Move Left" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::MOVE_RIGHT))
+			std::cout << "Move Right" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::JUMP))
+			std::cout << "Jump" << std::endl;
+
+		if (inputManager.isActionActive(Action::HIT))
+			std::cout << "Hit" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::PLACE))
+			std::cout << "Place" << std::endl;
+
+		if (inputManager.isActionJustPressed(Action::INTERACT))
+			std::cout << "Interact" << std::endl;
+
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+			camera.Inputs(window);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
