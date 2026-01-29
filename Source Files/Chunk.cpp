@@ -141,7 +141,7 @@ void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices,
     indices.push_back(startIndex + 3);
 }
 
-Mesh* Chunk::generateMesh(const std::vector<Texture>& textures) const {
+MeshData* Chunk::generateMesh() const {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
@@ -170,7 +170,7 @@ Mesh* Chunk::generateMesh(const std::vector<Texture>& textures) const {
         }
     }
 
-    return new Mesh(vertices, indices, textures);
+    return new MeshData(vertices, indices);
 }
 
 void Chunk::addBlockAtWorldPosition(const glm::ivec3 pos, const BlockType type) {

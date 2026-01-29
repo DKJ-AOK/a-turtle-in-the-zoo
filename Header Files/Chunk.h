@@ -17,11 +17,16 @@ enum BlockType {
 enum Biome {
     PLANES = 0,
     DESSERT = 1,
-
+    MOUNTAINS = 2
 };
 
 struct UVRect {
     float uStart, uEnd, vStart, vEnd;
+};
+
+struct MeshData {
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
 };
 
 class Chunk {
@@ -32,7 +37,7 @@ public:
     glm::ivec3 position;
 
     explicit Chunk(glm::ivec3 pos, std::uint32_t seed = 0);
-    [[nodiscard]] Mesh* generateMesh(const std::vector<Texture>& textures) const;
+    [[nodiscard]] MeshData* generateMesh() const;
 
     void addBlockAtWorldPosition(glm::ivec3 pos, BlockType type);
     [[nodiscard]] BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
