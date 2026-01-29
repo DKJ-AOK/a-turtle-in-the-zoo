@@ -55,14 +55,14 @@ void World::updateRenderDistance(const int newDistance) {
 void World::addBlock(const glm::ivec3 pos, const BlockType type) {
     auto chunkPos = glm::ivec2(std::floor(pos.x / 16.0f), std::floor(pos.z / 16.0f));
     auto& chunkData = chunks[{chunkPos.x, chunkPos.y}];
-    chunkData.chunk->blocks[pos.x % 16][pos.y][pos.z % 16] = type;
+    chunkData.chunk->addBlockAtWorldPosition(glm::ivec3(pos.x, pos.y, pos.z), type);
     chunkData.mesh = chunkData.chunk->generateMesh(textures);
     chunkData.isModified = true;
 }
 
 BlockType World::removeBlock(glm::ivec3 pos) {
     auto chunkPos = glm::ivec2(std::floor(pos.x / 16.0f), std::floor(pos.z / 16.0f));
-    auto blockType = chunks[{chunkPos.x, chunkPos.y}].chunk->blocks[pos.x % 16][pos.y][pos.z % 16];
+    const auto blockType = chunks[{chunkPos.x, chunkPos.y}].chunk->getBlockTypeAtWorldPosition(pos);
     addBlock(pos, AIR);
     return blockType;
 }

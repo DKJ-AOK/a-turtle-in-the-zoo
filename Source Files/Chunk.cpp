@@ -1,12 +1,12 @@
 ﻿#include "../Header Files/Chunk.h"
 
-Chunk::Chunk(glm::ivec3 pos, std::uint32_t seed) : position(pos) {
+Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
     // Initialize the Perlin Noise object with a seed
     static const siv::PerlinNoise perlin{ seed };
 
-    float frequency = 0.025f; // Lower values = smoother hills
-    int octaves = 4;         // More octaves = more detail/jaggedness
-    int surfaceHeight = 20;   // Base height
+    const float frequency = 0.025f; // Lower values = smoother hills
+    const int octaves = 4;         // More octaves = more detail/jaggedness
+    const int surfaceHeight = 20;   // Base height
 
     for (int x = 0; x < SIZE_X_Z; x++) {
         for (int z = 0; z < SIZE_X_Z; z++) {
@@ -18,7 +18,7 @@ Chunk::Chunk(glm::ivec3 pos, std::uint32_t seed) : position(pos) {
             // octave2D_01 handles multiple layers of noise for you
             double noise = perlin.octave2D_01(worldX * frequency, worldZ * frequency, octaves);
 
-            // Map to height (e.g., base height + up to 8 blocks)
+            // Map to height
             auto height = surfaceHeight + static_cast<int>(noise * surfaceHeight);
 
             for (int y = 0; y < SIZE_Y; y++) {
@@ -36,7 +36,7 @@ Chunk::Chunk(glm::ivec3 pos, std::uint32_t seed) : position(pos) {
     }
 }
 
-void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType type) {
+void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, const glm::vec3 pos, const int faceDir, const BlockType type) {
     float size = 0.4f; // Based on main.cpp model translation
     glm::vec3 p = pos * size;
     float s = size / 2.0f;
@@ -107,7 +107,7 @@ void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices,
     indices.push_back(startIndex + 3);
 }
 
-Mesh* Chunk::generateMesh(std::vector<Texture>& textures) {
+Mesh* Chunk::generateMesh(const std::vector<Texture>& textures) const {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
@@ -137,4 +137,12 @@ Mesh* Chunk::generateMesh(std::vector<Texture>& textures) {
     }
 
     return new Mesh(vertices, indices, textures);
+}
+
+void Chunk::addBlockAtWorldPosition(const glm::ivec3 pos, const BlockType type) {
+    blocks[pos.x % SIZE_X_Z][pos.y][pos.z % SIZE_X_Z] = type;
+}
+
+BlockType Chunk::getBlockTypeAtWorldPosition(const glm::ivec3 pos) const {
+    return blocks[pos.x % SIZE_X_Z][pos.y][pos.z % SIZE_X_Z];
 }
