@@ -5,17 +5,40 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# GLFW
-add_subdirectory(vendor/glfw-3.4)
-
-# GLAD
-include_directories(vendor/glad/include)
-add_library(GLAD vendor/glad/src/glad.c)
+find_package(glfw3 REQUIRED)
+find_package(glad CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(stb CONFIG REQUIRED)
+find_package(PerlinNoise)
 
 # Source Files
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES "Source Files/main.cpp"
+        "Header Files/VBO.h"
+        "Source Files/VBO.cpp"
+        "Header Files/VAO.h"
+        "Header Files/EBO.h"
+        "Source Files/VAO.cpp"
+        "Source Files/EBO.cpp"
+        "Source Files/shaderClass.cpp"
+        "Source Files/stb.cpp"
+        "Header Files/Texture.h"
+        "Source Files/Texture.cpp"
+        "Header Files/Camera.h"
+        "Source Files/Camera.cpp"
+        "Header Files/Mesh.h"
+        "Source Files/Mesh.cpp"
+        "Header Files/Chunk.h"
+        "Source Files/Chunk.cpp"
+        "Header Files/World.h"
+        "Source Files/World.cpp"
+)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} glfw GLAD)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        glfw           # GLFW is sometimes just 'glfw' or 'glfw3' depending on the package
+        glad::glad
+        glm::glm
+        stb::stb
+        siv::PerlinNoise)
