@@ -39,3 +39,7 @@
 
 # debug information files
 *.dwo
+/.idea/editor.xml
+/.idea/encodings.xml
+/.idea/misc.xml
+/.idea/modules.xml
