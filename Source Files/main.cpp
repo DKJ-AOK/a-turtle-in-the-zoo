@@ -92,7 +92,7 @@ int main() {
 	std::vector blockTex(blockTextures, blockTextures + sizeof(blockTextures) / sizeof(Texture));
 
 	auto seed = generateSeed();
-	World world(seed);
+	World world(seed, blockTex);
 
 	// Shader for light cube
 	Shader lightShader("../Resource Files/Shaders/light.vert", "../Resource Files/Shaders/light.frag");
@@ -136,7 +136,7 @@ int main() {
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 
-		world.updateChunks(camera.Position, blockTex);
+		world.updateChunks(camera.Position);
 
 		// Draws different meshes
 		shaderProgram.Activate();

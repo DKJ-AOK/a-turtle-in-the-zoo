@@ -12,13 +12,20 @@
 
 class World {
 public:
-    std::map<std::pair<int, int>, ChunkData> chunks;
-    std::uint32_t seed;
+    explicit World(std::uint32_t seed, const std::vector<Texture>& textures) : textures(textures), seed(seed) {};
+    void updateChunks(glm::vec3 cameraPos);
+    void draw(Shader& shader, Camera& camera) const;
+    void updateRenderDistance(int newDistance);
+    [[nodiscard]] int getRenderDistance() const { return renderDistance; }
 
-    World(std::uint32_t seed);
-    void updateChunks(glm::vec3 cameraPos, std::vector<Texture>& textures);
-    void draw(Shader& shader, Camera& camera);
-    int renderDistance = 8;
+    void addBlock(glm::ivec3 pos, BlockType type);
+    void removeBlock(glm::ivec3 pos);
+
+private:
+    std::map<std::pair<int, int>, ChunkData> chunks;
+    std::vector<Texture> textures;
+    std::uint32_t seed;
+    int renderDistance = 16;
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_WORLD_H
