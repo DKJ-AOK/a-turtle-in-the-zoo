@@ -1,7 +1,7 @@
 ﻿#include "../Header Files/Chunk.h"
 
 Chunk::Chunk(glm::ivec3 pos, std::uint32_t seed) : position(pos) {
-    // 1. Initialize the Perlin Noise object with a seed
+    // Initialize the Perlin Noise object with a seed
     static const siv::PerlinNoise perlin{ seed };
 
     float frequency = 0.025f; // Lower values = smoother hills
@@ -10,15 +10,15 @@ Chunk::Chunk(glm::ivec3 pos, std::uint32_t seed) : position(pos) {
 
     for (int x = 0; x < SIZE_X_Z; x++) {
         for (int z = 0; z < SIZE_X_Z; z++) {
-            // 2. Calculate world coordinates
+            // Calculate world coordinates
             auto worldX = static_cast<double>(pos.x * SIZE_X_Z + x);
             auto worldZ = static_cast<double>(pos.z * SIZE_X_Z + z);
 
-            // 3. Generate noise value between 0.0 and 1.0
+            // Generate noise value between 0.0 and 1.0
             // octave2D_01 handles multiple layers of noise for you
             double noise = perlin.octave2D_01(worldX * frequency, worldZ * frequency, octaves);
 
-            // 4. Map to height (e.g., base height + up to 8 blocks)
+            // Map to height (e.g., base height + up to 8 blocks)
             auto height = surfaceHeight + static_cast<int>(noise * surfaceHeight);
 
             for (int y = 0; y < SIZE_Y; y++) {
