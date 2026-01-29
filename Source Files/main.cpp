@@ -16,8 +16,8 @@ namespace fs = std::filesystem;
 #include"../Header Files/InputManager.h"
 
 
-const unsigned int width = 1600;
-const unsigned int height = 1200;
+const unsigned int screenWidth = 1600;
+const unsigned int screenHeight = 1200;
 
 Vertex lightVertices[] =
 { //     COORDINATES     //
@@ -64,7 +64,7 @@ int main() {
 	// So that means we only have the modern functions
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "Scuffed minecraft", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Scuffed minecraft", nullptr, nullptr);
 	// Error check if the window fails to create
 	if (window == nullptr)
 	{
@@ -82,7 +82,7 @@ int main() {
 	}
 	// Specify the viewport of OpenGL in the Window
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, screenWidth, screenHeight);
 
 	// Generates Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("../Resource Files/Shaders/default.vert", "../Resource Files/Shaders/default.frag");
@@ -122,9 +122,9 @@ int main() {
 	/*Texture popCat("pop_cat.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	popCat.texUnit(shaderProgram, "tex0", 0);*/
 
-	Camera camera(width, height, glm::vec3(0.0f, 2.0f, 5.0f));
-	InputManager inputManager;
-
+	Camera camera(screenWidth, screenHeight, glm::vec3(0.0f, 2.0f, 5.0f));
+	InputManager inputManager(screenWidth, screenHeight);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -174,6 +174,11 @@ int main() {
 
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 			camera.Inputs(window);
+
+		if (inputManager.isActionJustPressed(Action::EXIT_GAME)) {
+			std::cout << "Exit Game" << std::endl;
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		}
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);

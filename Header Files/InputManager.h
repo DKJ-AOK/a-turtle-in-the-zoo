@@ -17,6 +17,7 @@ enum Action {
     INTERACT,
     HIT,
     PLACE,
+    EXIT_GAME,
 };
 
 enum InputType {
@@ -40,14 +41,20 @@ private:
     std::map<InputBinding, bool> currentKeyStates;
     std::map<InputBinding, bool> previousKeyStates;
 
+    double lastX, lastY;
+    float mouseDeltaX = 0.0f, mouseDeltaY = 0.0f;
+    bool firstMouse = true;
+
 public:
-    InputManager();
+    InputManager(double screenWidth, double screenHeight);
 
     bool isActionActive(Action action);
     bool isActionJustPressed(Action action);
     void unbindAllKeyBindings(Action action);
     void bindKey(Action action, InputType inputType, int keyCode);
     void update(GLFWwindow* window);
+    [[nodiscard]] float getMouseDeltaX(float sensitivity = 0.1f) const;
+    [[nodiscard]] float getMouseDeltaY(float sensitivity = 0.1f) const;
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_INPUTMANAGER_H
