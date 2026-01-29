@@ -18,8 +18,9 @@ public:
     void updateRenderDistance(int newDistance);
     [[nodiscard]] int getRenderDistance() const { return renderDistance; }
 
-    void addBlock(glm::ivec3 pos, BlockType type);
-    BlockType removeBlock(glm::ivec3 pos);
+    void addBlockAtWorldPosition(glm::ivec3 pos, BlockType type);
+    BlockType removeBlockAtWorldPosition(glm::ivec3 pos);
+    BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
 
 private:
     std::map<std::pair<int, int>, ChunkData> chunks;

@@ -2,8 +2,8 @@
 
 void World::updateChunks(const glm::vec3 cameraPos) {
     // Convert camera position to chunk coordinates
-    int camX = static_cast<int>(std::floor(cameraPos.x / (16 * 0.4f)));
-    int camZ = static_cast<int>(std::floor(cameraPos.z / (16 * 0.4f)));
+    int camX = static_cast<int>(std::floor(cameraPos.x / (Chunk::SIZE_X_Z * 0.4f)));
+    int camZ = static_cast<int>(std::floor(cameraPos.z / (Chunk::SIZE_X_Z * 0.4f)));
 
     int radius = renderDistance / 2;
 
@@ -52,17 +52,42 @@ void World::updateRenderDistance(const int newDistance) {
     renderDistance = newDistance;
 }
 
-void World::addBlock(const glm::ivec3 pos, const BlockType type) {
-    auto chunkPos = glm::ivec2(std::floor(pos.x / 16.0f), std::floor(pos.z / 16.0f));
-    auto& chunkData = chunks[{chunkPos.x, chunkPos.y}];
-    chunkData.chunk->addBlockAtWorldPosition(glm::ivec3(pos.x, pos.y, pos.z), type);
-    chunkData.mesh = chunkData.chunk->generateMesh(textures);
-    chunkData.isModified = true;
+void World::addBlockAtWorldPosition(const glm::ivec3 pos, const BlockType type) {
+    auto chunkPos = glm::ivec2(
+        std::floor(static_cast<float>(pos.x) / Chunk::SIZE_X_Z),
+        std::floor(static_cast<float>(pos.z) / Chunk::SIZE_X_Z));
+
+    auto it = chunks.find({chunkPos.x, chunkPos.y});
+    if (it != chunks.end() && it->second.chunk) {
+        auto& chunkData = it->second;
+        chunkData.chunk->addBlockAtWorldPosition(glm::ivec3(pos.x, pos.y, pos.z), type);
+        chunkData.mesh = chunkData.chunk->generateMesh(textures);
+        chunkData.isModified = true;
+    }
 }
 
-BlockType World::removeBlock(glm::ivec3 pos) {
-    auto chunkPos = glm::ivec2(std::floor(pos.x / 16.0f), std::floor(pos.z / 16.0f));
-    const auto blockType = chunks[{chunkPos.x, chunkPos.y}].chunk->getBlockTypeAtWorldPosition(pos);
-    addBlock(pos, AIR);
-    return blockType;
+BlockType World::removeBlockAtWorldPosition(glm::ivec3 pos) {
+    auto chunkPos = glm::ivec2(
+        std::floor(static_cast<float>(pos.x) / Chunk::SIZE_X_Z),
+        std::floor(static_cast<float>(pos.z) / Chunk::SIZE_X_Z));
+
+    auto it = chunks.find({chunkPos.x, chunkPos.y});
+    if (it != chunks.end() && it->second.chunk) {
+        const auto blockType = it->second.chunk->getBlockTypeAtWorldPosition(pos);
+        addBlockAtWorldPosition(pos, AIR);
+        return blockType;
+    }
+    return AIR;
+}
+
+BlockType World::getBlockTypeAtWorldPosition(glm::ivec3 pos) const {
+    auto chunkPos = glm::ivec2(
+        std::floor(static_cast<float>(pos.x) / Chunk::SIZE_X_Z),
+        std::floor(static_cast<float>(pos.z) / Chunk::SIZE_X_Z));
+
+    auto it = chunks.find({chunkPos.x, chunkPos.y});
+    if (it != chunks.end() && it->second.chunk) {
+        return it->second.chunk->getBlockTypeAtWorldPosition(pos);
+    }
+    return AIR;
 }
