@@ -10,7 +10,12 @@ enum BlockType {
     AIR = 0,
     GRASS = 1,
     DIRT = 2,
-    STONE = 3
+    STONE = 3,
+    SAND = 4
+};
+
+struct UVRect {
+    float uStart, uEnd, vStart, vEnd;
 };
 
 class Chunk {
@@ -28,6 +33,7 @@ public:
 
 private:
     static void addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType type);
+    static UVRect getUVs(int column, int row);
 };
 
 struct ChunkData {
