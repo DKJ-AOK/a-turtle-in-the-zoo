@@ -17,14 +17,17 @@ class Chunk {
 public:
     static constexpr int SIZE_X_Z = 16;
     static constexpr int SIZE_Y = 256;
-    BlockType blocks[SIZE_X_Z][SIZE_Y][SIZE_X_Z];
+    BlockType blocks[SIZE_X_Z][SIZE_Y][SIZE_X_Z]{};
     glm::ivec3 position;
 
     explicit Chunk(glm::ivec3 pos, std::uint32_t seed = 0);
-    Mesh* generateMesh(std::vector<Texture>& textures);
+    Mesh* generateMesh(const std::vector<Texture>& textures) const;
+
+    void addBlockAtWorldPosition(glm::ivec3 pos, BlockType type);
+    BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
 
 private:
-    void addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType type);
+    static void addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType type);
 };
 
 struct ChunkData {
