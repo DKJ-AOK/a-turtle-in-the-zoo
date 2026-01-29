@@ -40,63 +40,50 @@ void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices,
     float size = 0.4f; // Based on main.cpp model translation
     glm::vec3 p = pos * size;
     float s = size / 2.0f;
-
-    // UV offsets based on texture sheet
-    // 0.0 - 0.25: Grass Top
-    // 0.25 - 0.5: Grass Side (Dirt with Grass)
-    // 0.5 - 0.75: Dirt
-    // 0.75 - 1.0: Stone (Last 4th as requested)
     
-    float uStart = 0.0f;
-    float uEnd = 0.25f;
+    UVRect uv = getUVs(15, 15);
 
-    if (type == STONE) {
-        uStart = 0.75f;
-        uEnd = 1.0f;
-    } else if (type == GRASS) {
-        if (faceDir == 0) { // Top
-            uStart = 0.0f; uEnd = 0.25f;
-        } else if (faceDir == 1) { // Bottom
-            uStart = 0.5f; uEnd = 0.75f;
-        } else { // Sides
-            uStart = 0.25f; uEnd = 0.5f;
-        }
-    } else if (type == DIRT) {
-        uStart = 0.5f; uEnd = 0.75f;
+    if (type == GRASS) {
+        if (faceDir == 0) uv = getUVs(0, 0); // Top
+        else if (faceDir == 1) uv = getUVs(2, 0); // Bottom
+        else uv = getUVs(1, 0); // Sides
     }
+    else if (type == DIRT) uv = getUVs(2, 0);
+    else if (type == STONE) uv = getUVs(3, 0);
+    else if (type == SAND) uv = getUVs(4, 0);
 
     GLuint startIndex = vertices.size();
 
     if (faceDir == 0) { // Top
-        vertices.push_back({p + glm::vec3(-s,  s,  s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, 0)});
-        vertices.push_back({p + glm::vec3(-s,  s, -s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, 1)});
-        vertices.push_back({p + glm::vec3( s,  s, -s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd, 1)});
-        vertices.push_back({p + glm::vec3( s,  s,  s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd, 0)});
+        vertices.push_back({p + glm::vec3(-s,  s,  s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vStart)});
+        vertices.push_back({p + glm::vec3(-s,  s, -s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vEnd)});
+        vertices.push_back({p + glm::vec3( s,  s, -s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vEnd)});
+        vertices.push_back({p + glm::vec3( s,  s,  s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vStart)});
     } else if (faceDir == 1) { // Bottom
-        vertices.push_back({p + glm::vec3(-s, -s, -s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, 0)});
-        vertices.push_back({p + glm::vec3(-s, -s,  s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, 1)});
-        vertices.push_back({p + glm::vec3( s, -s,  s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd, 1)});
-        vertices.push_back({p + glm::vec3( s, -s, -s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd, 0)});
+        vertices.push_back({p + glm::vec3(-s, -s, -s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vStart)});
+        vertices.push_back({p + glm::vec3(-s, -s,  s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vEnd)});
+        vertices.push_back({p + glm::vec3( s, -s,  s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vEnd)});
+        vertices.push_back({p + glm::vec3( s, -s, -s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vStart)});
     } else if (faceDir == 2) { // Front
-        vertices.push_back({p + glm::vec3(-s, -s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, 0)});
-        vertices.push_back({p + glm::vec3( s, -s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd, 0)});
-        vertices.push_back({p + glm::vec3( s,  s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd, 1)});
-        vertices.push_back({p + glm::vec3(-s,  s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, 1)});
+        vertices.push_back({p + glm::vec3(-s, -s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uv.uStart, uv.vStart)});
+        vertices.push_back({p + glm::vec3( s, -s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vStart)});
+        vertices.push_back({p + glm::vec3( s,  s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vEnd)});
+        vertices.push_back({p + glm::vec3(-s,  s,  s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uv.uStart, uv.vEnd)});
     } else if (faceDir == 3) { // Back
-        vertices.push_back({p + glm::vec3( s, -s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, 0)});
-        vertices.push_back({p + glm::vec3(-s, -s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd, 0)});
-        vertices.push_back({p + glm::vec3(-s,  s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd, 1)});
-        vertices.push_back({p + glm::vec3( s,  s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, 1)});
+        vertices.push_back({p + glm::vec3( s, -s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uv.uStart, uv.vStart)});
+        vertices.push_back({p + glm::vec3(-s, -s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vStart)});
+        vertices.push_back({p + glm::vec3(-s,  s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vEnd)});
+        vertices.push_back({p + glm::vec3( s,  s, -s), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uv.uStart, uv.vEnd)});
     } else if (faceDir == 4) { // Left
-        vertices.push_back({p + glm::vec3(-s, -s, -s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, 0)});
-        vertices.push_back({p + glm::vec3(-s, -s,  s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd, 0)});
-        vertices.push_back({p + glm::vec3(-s,  s,  s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd, 1)});
-        vertices.push_back({p + glm::vec3(-s,  s, -s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, 1)});
+        vertices.push_back({p + glm::vec3(-s, -s, -s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vStart)});
+        vertices.push_back({p + glm::vec3(-s, -s,  s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vStart)});
+        vertices.push_back({p + glm::vec3(-s,  s,  s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vEnd)});
+        vertices.push_back({p + glm::vec3(-s,  s, -s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vEnd)});
     } else if (faceDir == 5) { // Right
-        vertices.push_back({p + glm::vec3( s, -s,  s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, 0)});
-        vertices.push_back({p + glm::vec3( s, -s, -s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd, 0)});
-        vertices.push_back({p + glm::vec3( s,  s, -s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd, 1)});
-        vertices.push_back({p + glm::vec3( s,  s,  s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, 1)});
+        vertices.push_back({p + glm::vec3( s, -s,  s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vStart)});
+        vertices.push_back({p + glm::vec3( s, -s, -s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vStart)});
+        vertices.push_back({p + glm::vec3( s,  s, -s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uv.uEnd,   uv.vEnd)});
+        vertices.push_back({p + glm::vec3( s,  s,  s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uv.uStart, uv.vEnd)});
     }
 
     indices.push_back(startIndex + 0);
@@ -145,4 +132,9 @@ void Chunk::addBlockAtWorldPosition(const glm::ivec3 pos, const BlockType type) 
 
 BlockType Chunk::getBlockTypeAtWorldPosition(const glm::ivec3 pos) const {
     return blocks[pos.x % SIZE_X_Z][pos.y][pos.z % SIZE_X_Z];
+}
+
+UVRect Chunk::getUVs(int column, int row){
+    float size = 1.0f / 16.0f;
+    return UVRect{(column + 1) * size, column * size, 1 -(row + 1) * size,  1 - row * size};
 }
