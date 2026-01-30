@@ -51,7 +51,7 @@ void Camera::HandleRotation(float moveDeltaX, float moveDeltaY) {
     UpdateCameraVectors();
 }
 
-void Camera::HandleMovement(Action action, float deltaTime) {
+void Camera::HandleGroundMovement(Action action, float deltaTime) {
     float velocity = Speed * deltaTime;
 
     // For landscape-movement (NOT IN USE YET)
@@ -66,6 +66,23 @@ void Camera::HandleMovement(Action action, float deltaTime) {
         Position -= flatRight * velocity;
     if (action == Action::MOVE_RIGHT)
         Position += flatRight * velocity;
+    if (action == Action::SPRINT)
+        Speed = SprintSpeed;
+    if (action == Action::WALK)
+        Speed = WalkSpeed;
+}
+
+void Camera::HandleFlyingMovement(Action action, float deltaTime) {
+    float velocity = Speed * deltaTime;
+
+    if (action == Action::MOVE_FORWARD)
+        Position += Forward * velocity;
+    if (action == Action::MOVE_BACKWARD)
+        Position -= Forward * velocity;
+    if (action == Action::MOVE_LEFT)
+        Position -= Right * velocity;
+    if (action == Action::MOVE_RIGHT)
+        Position += Right * velocity;
     if (action == Action::SPRINT)
         Speed = SprintSpeed;
     if (action == Action::WALK)

@@ -21,6 +21,7 @@ InputManager::InputManager(double screenWidth, double screenHeight) {
     bindKey(PLACE, MOUSE_BUTTON, GLFW_MOUSE_BUTTON_RIGHT);
 
     bindKey(EXIT_GAME, KEYBOARD, GLFW_KEY_ESCAPE);
+    bindKey(GOD_MODE, KEYBOARD, GLFW_KEY_GRAVE_ACCENT);
 }
 
 void InputManager::bindKey(Action action, InputType inputType, int keyCode) {

@@ -52,7 +52,8 @@ public:
 
     // Receives data from the InputManager
     void HandleRotation(float moveDeltaX, float moveDeltaY);
-    void HandleMovement(Action action, float deltaTime);
+    void HandleGroundMovement(Action action, float deltaTime);
+    void HandleFlyingMovement(Action action, float deltaTime);
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_CAMERA_H
