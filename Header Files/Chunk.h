@@ -12,7 +12,8 @@ enum BlockType {
     DIRT = 2,
     STONE = 3,
     SAND = 4,
-    SNOWY_GRASS = 5
+    SNOWY_GRASS = 5,
+    WATER = 6
 };
 
 enum Biome {
@@ -69,6 +70,8 @@ private:
     BiomeSettings mountain = { 0.050f, 6, 60 };
     BiomeSettings desert   = { 0.020f, 3, 15 };
     BiomeSettings snowyTaiga = { 0.025f, 4, 25 };
+
+    int seaLevel = 20;
 };
 
 struct ChunkData {

@@ -28,7 +28,9 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
             }
 
             for (int y = 0; y < SIZE_Y; y++) {
-                if (y < height - 4) {
+                if (y > height && y <= seaLevel) {
+                    blocks[x][y][z] = WATER;
+                } else if (y < height - 4) {
                     blocks[x][y][z] = STONE;
                 } else if (y < height) {
                     blocks[x][y][z] = subSurfaceBlock;
@@ -161,6 +163,7 @@ UVRect Chunk::getUVs(BlockType type, int faceDir) {
     if (type == DIRT) return  getUVsForCoordinates(2, 0);
     if (type == STONE) return  getUVsForCoordinates(3, 0);
     if (type == SAND) return  getUVsForCoordinates(4, 0);
+    if (type == WATER) return getUVsForCoordinates(0, 1);
     return getUVsForCoordinates(15, 15);
 }
 
@@ -178,17 +181,17 @@ MeshData* Chunk::generateMesh() const {
 
                 // Check neighbors
                 // Top
-                if (y == SIZE_X_Z - 1 || blocks[x][y+1][z] == AIR) addFace(vertices, indices, pos, 0, type);
+                if (y == SIZE_X_Z - 1 || blocks[x][y+1][z] == AIR || (blocks[x][y][z] != WATER && blocks[x][y+1][z] == WATER)) addFace(vertices, indices, pos, 0, type);
                 // Bottom
-                if (y == 0 || blocks[x][y-1][z] == AIR) addFace(vertices, indices, pos, 1, type);
+                if (y == 0 || blocks[x][y-1][z] == AIR || (blocks[x][y][z] != WATER && blocks[x][y-1][z] == WATER)) addFace(vertices, indices, pos, 1, type);
                 // Front
-                if (z == SIZE_X_Z - 1 || blocks[x][y][z+1] == AIR) addFace(vertices, indices, pos, 2, type);
+                if (z == SIZE_X_Z - 1 || blocks[x][y][z+1] == AIR || (blocks[x][y][z] != WATER && blocks[x][y][z+1] == WATER)) addFace(vertices, indices, pos, 2, type);
                 // Back
-                if (z == 0 || blocks[x][y][z-1] == AIR) addFace(vertices, indices, pos, 3, type);
+                if (z == 0 || blocks[x][y][z-1] == AIR || (blocks[x][y][z] != WATER && blocks[x][y][z-1] == WATER)) addFace(vertices, indices, pos, 3, type);
                 // Left
-                if (x == 0 || blocks[x-1][y][z] == AIR) addFace(vertices, indices, pos, 4, type);
+                if (x == 0 || blocks[x-1][y][z] == AIR || (blocks[x][y][z] != WATER && blocks[x-1][y][z] == WATER)) addFace(vertices, indices, pos, 4, type);
                 // Right
-                if (x == SIZE_X_Z - 1 || blocks[x+1][y][z] == AIR) addFace(vertices, indices, pos, 5, type);
+                if (x == SIZE_X_Z - 1 || blocks[x+1][y][z] == AIR || (blocks[x][y][z] != WATER && blocks[x+1][y][z] == WATER)) addFace(vertices, indices, pos, 5, type);
             }
         }
     }
