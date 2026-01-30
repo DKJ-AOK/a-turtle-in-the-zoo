@@ -88,8 +88,7 @@ void World::updateChunks(const glm::vec3 cameraPos) {
         delete item.meshData;
 
         std::lock_guard lock(chunksMutex);
-        auto it = chunks.find({item.pos.x, item.pos.z});
-        if (it != chunks.end()) {
+        if (auto it = chunks.find({item.pos.x, item.pos.z}); it != chunks.end()) {
             auto& entry = it->second;
             delete entry.opaqueMesh;
             delete entry.transparentMesh;
