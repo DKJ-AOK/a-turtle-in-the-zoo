@@ -31,6 +31,10 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/Chunk.cpp"
         "Header Files/World.h"
         "Source Files/World.cpp"
+        "Header Files/InputManager.h"
+        "Source Files/InputManager.cpp"
+        "Header Files/PlayerController.h"
+        "Source Files/PlayerController.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

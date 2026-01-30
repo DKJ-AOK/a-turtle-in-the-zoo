@@ -1,5 +1,7 @@
 //------- Ignore this ----------
 #include<filesystem>
+
+#include "../Header Files/PlayerController.h"
 namespace fs = std::filesystem;
 //------------------------------
 
@@ -13,10 +15,11 @@ namespace fs = std::filesystem;
 #include<stb_image.h>
 #include"../Header Files/Mesh.h"
 #include"../Header Files/World.h"
+#include"../Header Files/InputManager.h"
 
 
-const unsigned int width = 1600;
-const unsigned int height = 1200;
+const unsigned int screenWidth = 1600;
+const unsigned int screenHeight = 1200;
 
 Vertex lightVertices[] =
 { //     COORDINATES     //
@@ -63,7 +66,7 @@ int main() {
 	// So that means we only have the modern functions
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "Scuffed minecraft", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Scuffed minecraft", nullptr, nullptr);
 	// Error check if the window fails to create
 	if (window == nullptr)
 	{
@@ -81,7 +84,7 @@ int main() {
 	}
 	// Specify the viewport of OpenGL in the Window
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, screenWidth, screenHeight);
 
 	// Generates Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("../Resource Files/Shaders/default.vert", "../Resource Files/Shaders/default.frag");
@@ -121,28 +124,42 @@ int main() {
 	/*Texture popCat("pop_cat.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	popCat.texUnit(shaderProgram, "tex0", 0);*/
 
-	Camera camera(width, height, glm::vec3(0.0f, 2.0f, 5.0f));
+	InputManager inputManager(screenWidth, screenHeight);
+	PlayerController playerController(inputManager, screenWidth, screenHeight);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	float deltaTime = 0.0f;
+	float lastFrame = 0.0f;
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		// Updates State of Keybindings
+		inputManager.update(window);
+		playerController.update(deltaTime);
+
+		if (inputManager.isActionJustPressed(Action::EXIT_GAME)) {
+			std::cout << "Exit Game" << std::endl;
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		}
+
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Handles camera inputs
-		camera.Inputs(window);
 		// Updates and exports the camera matrix to the Vertex Shader
-		camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
-
-		world.updateChunks(camera.Position);
+		world.updateChunks(playerController.camera.Position);
 
 		// Draws different meshes
 		shaderProgram.Activate();
 
-		world.draw(shaderProgram, camera);
-		light.Draw(lightShader, camera);
+		world.draw(shaderProgram, playerController.camera);
+		light.Draw(lightShader, playerController.camera);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
