@@ -17,8 +17,8 @@ namespace fs = std::filesystem;
 #include"../Header Files/InputManager.h"
 
 
-const unsigned int width = 1200;
-const unsigned int height = 800;
+const unsigned int screenWidth = 1200;
+const unsigned int screenHeight = 800;
 
 Vertex lightVertices[] =
 { //     COORDINATES     //
