@@ -1,7 +1,7 @@
 ﻿#include "../Header Files/World.h"
 #include "../Header Files/Chunk.h"
 
-World::World(std::uint32_t seed, const std::vector<Texture> &textures) : textures(textures), seed(seed) {
+World::World(const std::uint32_t seed, const std::vector<Texture> &textures) : textures(textures), seed(seed) {
     // THIS LINE IS ESSENTIAL:
     workerThread = std::thread(&World::workerLoop, this);
 }
@@ -18,7 +18,6 @@ World::~World() {
 
     // Clean up all loaded chunks and meshes
     for (auto& pair : chunks) {
-        delete pair.second.chunk;
         delete pair.second.opaqueMesh;
         delete pair.second.transparentMesh;
     }
@@ -27,17 +26,16 @@ World::~World() {
     // Clean up any leftover data in the completed queue
     // (In case the game closed before they were moved to the map)
     for (auto& item : completedChunks) {
-        delete item.chunk;
         delete item.meshData;
     }
 }
 
 void World::updateChunks(const glm::vec3 cameraPos) {
     // Convert camera position to chunk coordinates
-    int camX = static_cast<int>(std::floor(cameraPos.x / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
-    int camZ = static_cast<int>(std::floor(cameraPos.z / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
+    const int camX = static_cast<int>(std::floor(cameraPos.x / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
+    const int camZ = static_cast<int>(std::floor(cameraPos.z / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
 
-    int radius = renderDistance / 2;
+    const int radius = renderDistance / 2;
 
     // 1. LOADING: Add new chunks around the camera
     for (int x = camX - radius; x <= camX + radius; x++) {
@@ -46,7 +44,7 @@ void World::updateChunks(const glm::vec3 cameraPos) {
             bool exists;
             {
                 std::lock_guard lock(chunksMutex);
-                exists = (chunks.find({x, z}) != chunks.end());
+                exists = (chunks.contains({x, z}));
             }
             if (!exists) {
                 AddChunkToGenerate({x, z});
@@ -64,11 +62,9 @@ void World::updateChunks(const glm::vec3 cameraPos) {
 
             // If distance is greater than radius + buffer (to prevent flickering)
             if (std::abs(dx) > radius + 2 || std::abs(dz) > radius + 2) {
-                // Since we hold both chunksMutex and queueMutex, 
-                // and the worker thread re-checks chunksMutex before finalizing any work,
-                // it is safe to delete it here.
+                // Since we use shared_ptr, it is safe to erase it from the map.
+                // If a worker thread is currently meshing it, it will keep a reference.
                 
-                delete it->second.chunk;
                 delete it->second.opaqueMesh;
                 delete it->second.transparentMesh;
                 it = chunks.erase(it);   // Remove from map and get next iterator
@@ -92,29 +88,35 @@ void World::updateChunks(const glm::vec3 cameraPos) {
         delete item.meshData;
 
         std::lock_guard lock(chunksMutex);
-        auto& entry = chunks[{item.pos.x, item.pos.z}];
-        delete entry.opaqueMesh;
-        delete entry.transparentMesh;
+        if (auto it = chunks.find({item.pos.x, item.pos.z}); it != chunks.end()) {
+            auto& entry = it->second;
+            delete entry.opaqueMesh;
+            delete entry.transparentMesh;
 
-        entry.chunk = item.chunk;
-        entry.opaqueMesh = newOpaqueMesh;
-        entry.transparentMesh = newTransparentMesh;
+            entry.chunk = std::move(item.chunk);
+            entry.opaqueMesh = newOpaqueMesh;
+            entry.transparentMesh = newTransparentMesh;
 
-        // If this was a new chunk, trigger rebuild of neighbors to fix boundary faces
-        if (item.pos.y == 0) {
-            const glm::ivec2 neighbors[] = {
-                {item.pos.x + 1, item.pos.z}, {item.pos.x - 1, item.pos.z},
-                {item.pos.x, item.pos.z + 1}, {item.pos.x, item.pos.z - 1}
-            };
+            // If this was a new chunk, trigger rebuild of neighbors to fix boundary faces
+            if (item.pos.y == 0) {
+                const glm::ivec2 neighbors[] = {
+                    {item.pos.x + 1, item.pos.z}, {item.pos.x - 1, item.pos.z},
+                    {item.pos.x, item.pos.z + 1}, {item.pos.x, item.pos.z - 1}
+                };
 
-            for (const auto& neighborPos : neighbors) {
-                if (auto it = chunks.find({neighborPos.x, neighborPos.y}); it != chunks.end() && it->second.chunk) {
-                    // Add to the worker queue to rebuild the mesh
-                    std::lock_guard qLock(queueMutex);
-                    pendingPositions.emplace(neighborPos.x, 1, neighborPos.y); // Use Y=1 as a 'Rebuild' flag
-                    cv.notify_one();
+                for (const auto& neighborPos : neighbors) {
+                    if (auto nIt = chunks.find({neighborPos.x, neighborPos.y}); nIt != chunks.end() && nIt->second.chunk) {
+                        // Add to the worker queue to rebuild the mesh
+                        std::lock_guard qLock(queueMutex);
+                        pendingPositions.emplace(neighborPos.x, 1, neighborPos.y); // Use Y=1 as a 'Rebuild' flag
+                        cv.notify_one();
+                    }
                 }
             }
+        } else {
+            // Chunk was unloaded while we were meshing it
+            delete newOpaqueMesh;
+            delete newTransparentMesh;
         }
     }
 }
@@ -249,11 +251,11 @@ void World::workerLoop() {
             pendingPositions.pop();
         }
 
-        Chunk* targetChunk = nullptr;
+        std::shared_ptr<Chunk> targetChunk = nullptr;
         bool isNewChunk = (task.y == 0);
         if (isNewChunk) {
             // Task: Load New Chunk
-            targetChunk = new Chunk(glm::ivec3(task.x, 0, task.z), seed);
+            targetChunk = std::make_shared<Chunk>(glm::ivec3(task.x, 0, task.z), seed);
         } else {
             // Task: Rebuild Existing Chunk
             std::lock_guard lock(chunksMutex);
@@ -273,10 +275,9 @@ void World::workerLoop() {
             auto it = chunks.find({task.x, task.z});
             if (it != chunks.end()) {
                 std::lock_guard cLock(completedMutex);
-                completedChunks.push_back({glm::ivec3(task.x, task.y, task.z), targetChunk, data});
+                completedChunks.push_back({glm::ivec3(task.x, task.y, task.z), std::move(targetChunk), data});
             } else {
                 // Chunk was unloaded while we were meshing it!
-                if (isNewChunk) delete targetChunk;
                 delete data;
             }
         }
