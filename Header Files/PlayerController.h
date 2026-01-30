@@ -1,7 +1,3 @@
-//
-// Created by Oetho on 29-01-2026.
-//
-
 #ifndef A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H
 #define A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H
 #include "Camera.h"
@@ -22,7 +18,7 @@ class PlayerController {
     bool isGodModeActive = false;
 
     PlayerController(InputManager& inputManagerRef, int screenWidth, int screenHeight)
-    : camera(screenWidth, screenHeight, glm::vec3(0.0f, 10.0f, 5.0f)), inputManager(inputManagerRef) {};
+    : camera(screenWidth, screenHeight, glm::vec3(0.0f, 30.0f, 5.0f)), inputManager(inputManagerRef) {};
 
     void update(float deltaTime);
 
