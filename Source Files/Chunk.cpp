@@ -16,11 +16,11 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
                 if (y < height - 10) {
                     blocks[x][y][z] = STONE;
                 }
-                if (biome == PLANES) {
+                if (biome == PLANES || biome == SNOWY_TAIGA) {
                     if (y < height) {
                         blocks[x][y][z] = DIRT;
                     } else if (y == height) {
-                        blocks[x][y][z] = GRASS;
+                        blocks[x][y][z] = biome == PLANES ? GRASS : SNOWY_GRASS;
                     }
                 }
                 else if (biome == DESSERT && y <= height) {
@@ -34,20 +34,20 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
     }
 }
 
-int Chunk::getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome biome) const {
+int Chunk::getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome biome) {
     // Initialize the Perlin Noise object with a seed
     static const siv::PerlinNoise perlin{ seed };
 
     float frequency;     // Lower values = smoother hills
     int octaves;         // More octaves = more detail/jaggedness
-    int surfaceHeight;   // Base height
+    int surfaceHeight = 20;   // Base height
 
     switch (biome) {
         case PLANES:
         case DESSERT:
+        case SNOWY_TAIGA:
             frequency = 0.025f;
             octaves = 4;
-            surfaceHeight = 20;
             break;
         default:
             frequency = 0.0f;
@@ -64,9 +64,9 @@ int Chunk::getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome bi
     return surfaceHeight + static_cast<int>(noise * surfaceHeight);
 }
 
-Biome Chunk::getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) const {
-    const float frequency = 0.005f;     // Lower values = smoother hills
-    const int octaves = 8;             // More octaves = more detail/jaggedness
+Biome Chunk::getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) {
+    constexpr float frequency = 0.002f;     // Lower values = smoother hills
+    constexpr int octaves = 4;             // More octaves = more detail/jaggedness
 
     std::mt19937 rng{seed};
     const uint32_t humiditySeed = rng();
@@ -75,9 +75,14 @@ Biome Chunk::getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) const {
     static const siv::PerlinNoise humidityPerlin{ humiditySeed };
     static const siv::PerlinNoise temperaturePerlin{ temperatureSeed };
 
-    if (humidityPerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves) <= 0.3f &&
-        temperaturePerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves) >= 0.7f) {
+    const double humidity = humidityPerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves);
+    const double temperature = temperaturePerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves);
+
+    if (humidity <= 0.3f && temperature >= 0.7f) {
         return DESSERT;
+    }
+    if (humidity >= 0.7f && temperature <= 0.2f) {
+        return SNOWY_TAIGA;
     }
 
     return PLANES;
@@ -88,16 +93,7 @@ void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices,
     const glm::vec3 p = pos * size;
     constexpr float s = size / 2.0f;
     
-    UVRect uv = getUVs(15, 15);
-
-    if (type == GRASS) {
-        if (faceDir == 0) uv = getUVs(0, 0); // Top
-        else if (faceDir == 1) uv = getUVs(2, 0); // Bottom
-        else uv = getUVs(1, 0); // Sides
-    }
-    else if (type == DIRT) uv = getUVs(2, 0);
-    else if (type == STONE) uv = getUVs(3, 0);
-    else if (type == SAND) uv = getUVs(4, 0);
+    UVRect uv = getUVs(type, faceDir);
 
     GLuint startIndex = vertices.size();
 
@@ -141,6 +137,22 @@ void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices,
     indices.push_back(startIndex + 3);
 }
 
+UVRect Chunk::getUVs(BlockType type, int faceDir) {
+    if (type == GRASS) {
+        if (faceDir == 0) return getUVsForCoordinates(0, 0); // Top
+        if (faceDir == 1) return getUVsForCoordinates(2, 0); // Bottom
+        return getUVsForCoordinates(1, 0); // Sides
+    } if (type == SNOWY_GRASS) {
+        if (faceDir == 0) return getUVsForCoordinates(5, 0); // Top
+        if (faceDir == 1) return getUVsForCoordinates(7, 0); // Bottom
+        return getUVsForCoordinates(6, 0); // Sides
+    }
+    if (type == DIRT) return  getUVsForCoordinates(2, 0);
+    if (type == STONE) return  getUVsForCoordinates(3, 0);
+    if (type == SAND) return  getUVsForCoordinates(4, 0);
+    return getUVsForCoordinates(15, 15);
+}
+
 MeshData* Chunk::generateMesh() const {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
@@ -181,7 +193,7 @@ BlockType Chunk::getBlockTypeAtWorldPosition(const glm::ivec3 pos) const {
     return blocks[pos.x % SIZE_X_Z][pos.y][pos.z % SIZE_X_Z];
 }
 
-UVRect Chunk::getUVs(int column, int row){
+UVRect Chunk::getUVsForCoordinates(int column, int row){
     float size = 1.0f / 16.0f;
     return UVRect{(column + 1) * size, column * size, 1 -(row + 1) * size,  1 - row * size};
 }
