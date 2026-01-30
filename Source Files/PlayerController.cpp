@@ -5,12 +5,44 @@
 #include "../Header Files/PlayerController.h"
 
 void PlayerController::update(float deltaTime) {
+    // 1. Rotation (Mouse)
     camera.HandleRotation(inputManager.getMouseDeltaX(), inputManager.getMouseDeltaY());
-    CheckForMovement(deltaTime);
+
+    // 2. Horizontal Movement (WASD)
+    handleGroundMovement(deltaTime);
+
+    // 3. Vertical Movement (Gravity & Jump)
+    applyPhysics(deltaTime);
+
+    // 4. Matrix Update
     camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
 }
 
-void PlayerController::CheckForMovement(float deltaTime) {
+void PlayerController::applyPhysics(float deltaTime) {
+    // Add Gravity to the vertical speed
+    if (!isGrounded)
+        verticalVelocity += gravity * deltaTime;
+    else
+        verticalVelocity = 0.0f;
+
+    // Jump Logic
+    if (inputManager.isActionJustPressed(Action::JUMP) && isGrounded) {
+        std::cout << "Jump" << std::endl;
+        verticalVelocity = jumpForce;
+        isGrounded = false;
+    }
+
+    // Update position based on speed
+    camera.Position.y += verticalVelocity * deltaTime;
+
+    // Simple ground-check
+    if (camera.Position.y <= groundLevel) {
+        camera.Position.y = groundLevel;
+        isGrounded = true;
+    }
+}
+
+void PlayerController::handleGroundMovement(float deltaTime) {
     if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
         camera.HandleMovement(MOVE_FORWARD, deltaTime);
     }
@@ -26,9 +58,6 @@ void PlayerController::CheckForMovement(float deltaTime) {
     if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
         camera.HandleMovement(MOVE_RIGHT, deltaTime);
     }
-
-    if (inputManager.isActionJustPressed(Action::JUMP))
-        std::cout << "Jump" << std::endl;
 
     if (inputManager.isActionActive(Action::SPRINT))
         camera.HandleMovement(SPRINT, deltaTime);
