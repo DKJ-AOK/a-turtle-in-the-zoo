@@ -167,12 +167,11 @@ bool World::isFaceVisible(const glm::ivec3 worldPos, const glm::ivec3 dir, const
     if (const auto it = chunks.find({chunkX, chunkZ}); it != chunks.end() && it->second.chunk) {
         const auto neighborBlock = it->second.chunk->getBlockTypeAtWorldPosition(neighborPos);
 
-        if (neighborBlock == AIR) return true;
-
         // If they are the same type of transparent block, hide the face
         if (currentBlock == neighborBlock && currentBlock == WATER) return false;
-        // If neighbor is transparent, show face
-        if (neighborBlock == WATER) return true;
+        if (std::ranges::any_of(Chunk::NO_COLLISION_BLOCKS, [&](const BlockType quadBlock)
+            { return quadBlock == neighborBlock; }))
+            return true;
 
         return false;
     }

@@ -16,7 +16,10 @@ enum BlockType : int {
     STONE = 3,
     SAND = 4,
     SNOWY_GRASS = 5,
-    WATER = 6
+    WATER = 6,
+    TOP_WATER = 7,
+    GRASS_QUAD = 8,
+    RED_FLOWER_QUAD = 9,
 };
 
 enum Biome {
@@ -30,11 +33,15 @@ struct UVRect {
     float uStart, uEnd, vStart, vEnd;
 };
 
+struct ShapeData {
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+};
+
 struct MeshData {
-    std::vector<Vertex> opaqueVertices;
-    std::vector<GLuint> opaqueIndices;
-    std::vector<Vertex> transparentVertices;
-    std::vector<GLuint> transparentIndices;
+    ShapeData opaqueShapes;
+    ShapeData transparentShapes;
+    ShapeData crossQuadShapes;
 };
 
 struct BiomeSettings {
@@ -55,12 +62,12 @@ public:
     static constexpr int SIZE_X_Z = 16;
     static constexpr int SIZE_Y = 256;
     static constexpr float BLOCK_SCALE = 1.0f;
+    static constexpr BlockType NO_COLLISION_BLOCKS[] = {AIR, GRASS_QUAD, RED_FLOWER_QUAD, WATER, TOP_WATER};
     BlockType blocks[SIZE_X_Z][SIZE_Y][SIZE_X_Z]{};
     glm::ivec3 position;
 
     explicit Chunk(glm::ivec3 pos, std::uint32_t seed = 0);
     [[nodiscard]] MeshData* generateMesh(World& world) const;
-    [[nodiscard]] MeshData* generateTransparentMesh(World& world) const;
 
     void addBlockAtWorldPosition(glm::ivec3 pos, BlockType type);
     [[nodiscard]] BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
@@ -68,7 +75,10 @@ public:
 private:
     int seaLevel = 20;
 
-    static void addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType type);
+    void addCrossQuadFaces(ShapeData& shapes, glm::vec3 pos) const;
+    void addBlockFaces(World& world, ShapeData& shapes, glm::vec3 pos, BlockType blockType) const;
+    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType);
+
     static UVRect getUVsForCoordinates(int column, int row);
     static UVRect getUVs(BlockType type, int faceDir);
 
@@ -82,15 +92,15 @@ private:
 };
 
 struct ChunkData {
-    std::shared_ptr<Chunk> chunk;    // Pointer to the Chunk object (contains block data)
-    Mesh* opaqueMesh;      // Pointer to the Mesh object (used for rendering)
-    Mesh* transparentMesh;      // Pointer to the Mesh object (used for rendering)
-    bool isModified; // true if the user changed blocks (useful for saving to disk)
+    std::shared_ptr<Chunk> chunk;       // Pointer to the Chunk object (contains block data)
+    Mesh* opaqueMesh;                   // Pointer to the Mesh object (used for rendering)
+    Mesh* transparentMesh;              // Pointer to the Mesh object (used for rendering transparent objects, e.g. water)
+    Mesh* crossQuadMesh;                // Pointer to the Mesh object (used for rendering CrossQuad objects, e.g. grass)
+    bool isModified;                    // true if the user changed blocks (useful for saving to disk)
 
     // Constructor for convenience
-    explicit ChunkData(std::shared_ptr<Chunk> c = nullptr, Mesh* om = nullptr, Mesh* tm = nullptr)
-        : chunk(std::move(c)), opaqueMesh(om), transparentMesh(tm), isModified(false) {
-    }
+    explicit ChunkData(std::shared_ptr<Chunk> c = nullptr, Mesh* om = nullptr, Mesh* tm = nullptr, Mesh* cqm = nullptr)
+        : chunk(std::move(c)), opaqueMesh(om), transparentMesh(tm), crossQuadMesh(cqm), isModified(false) { }
 };
 
 #endif
