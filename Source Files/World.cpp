@@ -1,7 +1,7 @@
 ﻿#include "../Header Files/World.h"
 #include "../Header Files/Chunk.h"
 
-World::World(std::uint32_t seed, const std::vector<Texture> &textures) : textures(textures), seed(seed) {
+World::World(const std::uint32_t seed, const std::vector<Texture> &textures) : textures(textures), seed(seed) {
     // THIS LINE IS ESSENTIAL:
     workerThread = std::thread(&World::workerLoop, this);
 }
@@ -32,10 +32,10 @@ World::~World() {
 
 void World::updateChunks(const glm::vec3 cameraPos) {
     // Convert camera position to chunk coordinates
-    int camX = static_cast<int>(std::floor(cameraPos.x / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
-    int camZ = static_cast<int>(std::floor(cameraPos.z / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
+    const int camX = static_cast<int>(std::floor(cameraPos.x / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
+    const int camZ = static_cast<int>(std::floor(cameraPos.z / (Chunk::SIZE_X_Z * Chunk::BLOCK_SCALE)));
 
-    int radius = renderDistance / 2;
+    const int radius = renderDistance / 2;
 
     // 1. LOADING: Add new chunks around the camera
     for (int x = camX - radius; x <= camX + radius; x++) {
@@ -44,7 +44,7 @@ void World::updateChunks(const glm::vec3 cameraPos) {
             bool exists;
             {
                 std::lock_guard lock(chunksMutex);
-                exists = (chunks.find({x, z}) != chunks.end());
+                exists = (chunks.contains({x, z}));
             }
             if (!exists) {
                 AddChunkToGenerate({x, z});
