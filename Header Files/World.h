@@ -12,6 +12,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <glm/vec2.hpp>
+#include <memory>
 
 #include "Physics.h"
 
@@ -25,7 +26,7 @@ class Camera;
 
 struct CompletedChunk {
     glm::ivec3 pos;
-    Chunk* chunk;
+    std::shared_ptr<Chunk> chunk;
     MeshData* meshData;
 };
 

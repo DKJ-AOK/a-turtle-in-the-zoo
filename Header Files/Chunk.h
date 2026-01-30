@@ -4,6 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <PerlinNoise.hpp>
+#include <memory>
 #include "Mesh.h"
 
 class World;
@@ -81,14 +82,14 @@ private:
 };
 
 struct ChunkData {
-    Chunk* chunk;    // Pointer to the Chunk object (contains block data)
+    std::shared_ptr<Chunk> chunk;    // Pointer to the Chunk object (contains block data)
     Mesh* opaqueMesh;      // Pointer to the Mesh object (used for rendering)
     Mesh* transparentMesh;      // Pointer to the Mesh object (used for rendering)
     bool isModified; // true if the user changed blocks (useful for saving to disk)
 
     // Constructor for convenience
-    explicit ChunkData(Chunk* c = nullptr, Mesh* om = nullptr, Mesh* tm = nullptr)
-        : chunk(c), opaqueMesh(om), transparentMesh(tm), isModified(false) {
+    explicit ChunkData(std::shared_ptr<Chunk> c = nullptr, Mesh* om = nullptr, Mesh* tm = nullptr)
+        : chunk(std::move(c)), opaqueMesh(om), transparentMesh(tm), isModified(false) {
     }
 };
 
