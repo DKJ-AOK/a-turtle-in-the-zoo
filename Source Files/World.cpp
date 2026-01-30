@@ -283,3 +283,47 @@ void World::workerLoop() {
         }
     }
 }
+
+bool World::checkCollision(const AABB &playerBox) {
+    // Find min/max Coordinates in grid-units
+    int minX = std::floor(playerBox.min.x / Chunk::BLOCK_SCALE);
+    int maxX = std::ceil(playerBox.max.x / Chunk::BLOCK_SCALE);
+    int minY = std::floor(playerBox.min.y / Chunk::BLOCK_SCALE);
+    int maxY = std::ceil(playerBox.max.y / Chunk::BLOCK_SCALE);
+    int minZ = std::floor(playerBox.min.z / Chunk::BLOCK_SCALE);
+    int maxZ = std::ceil(playerBox.max.z / Chunk::BLOCK_SCALE);
+
+    for (int x = minX; x <= maxX; x++) {
+        for (int y = minY; y <= maxY; y++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                if (auto blockTypeAtPos = getBlockTypeAtWorldPosition({x, y, z});
+                    blockTypeAtPos != BlockType::AIR &&
+                    blockTypeAtPos != BlockType::WATER) {
+
+                    // Generate AABB for the block
+                    AABB blockAABB = getBlockAABB(x, y, z);
+
+                    if (intersect(playerBox, blockAABB))
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool World::intersect(const AABB &a, const AABB &b) {
+    return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&
+           (a.min.y <= b.max.y && a.max.y >= b.min.y) &&
+           (a.min.z <= b.max.z && a.max.z >= b.min.z);
+}
+
+AABB World::getBlockAABB(const int x, const int y, const int z) {
+    constexpr float cubeSize = Chunk::BLOCK_SCALE;
+
+    // We assume the cube is centered in its cell
+    const auto center = glm::vec3(x, y, z);
+    constexpr float half = cubeSize / 2.0f;
+
+    return { center - glm::vec3(half), center + glm::vec3(half) };
+}
