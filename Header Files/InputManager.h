@@ -20,6 +20,8 @@ enum Action {
     HIT,
     PLACE,
     EXIT_GAME,
+    GOD_MODE,
+    NORMAL_MODE,
 };
 
 enum InputType {

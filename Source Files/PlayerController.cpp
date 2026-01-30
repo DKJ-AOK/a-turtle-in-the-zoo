@@ -9,10 +9,14 @@ void PlayerController::update(float deltaTime) {
     camera.HandleRotation(inputManager.getMouseDeltaX(), inputManager.getMouseDeltaY());
 
     // 2. Horizontal Movement (WASD)
-    handleGroundMovement(deltaTime);
+    if (isGodModeActive)
+        handleFlyingMovement(deltaTime);
+    else
+        handleGroundMovement(deltaTime);
 
     // 3. Vertical Movement (Gravity & Jump)
-    applyPhysics(deltaTime);
+    if (!isGodModeActive)
+        applyPhysics(deltaTime);
 
     // 4. Matrix Update
     camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
@@ -43,26 +47,31 @@ void PlayerController::applyPhysics(float deltaTime) {
 }
 
 void PlayerController::handleGroundMovement(float deltaTime) {
+    if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
+        std::cout << "God Mode Activated" << std::endl;
+        isGodModeActive = true;
+    }
+
     if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
-        camera.HandleMovement(MOVE_FORWARD, deltaTime);
+        camera.HandleGroundMovement(MOVE_FORWARD, deltaTime);
     }
 
     if (inputManager.isActionActive(Action::MOVE_BACKWARD)) {
-        camera.HandleMovement(MOVE_BACKWARD, deltaTime);
+        camera.HandleGroundMovement(MOVE_BACKWARD, deltaTime);
     }
 
     if (inputManager.isActionActive(Action::MOVE_LEFT)) {
-        camera.HandleMovement(MOVE_LEFT, deltaTime);
+        camera.HandleGroundMovement(MOVE_LEFT, deltaTime);
     }
 
     if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
-        camera.HandleMovement(MOVE_RIGHT, deltaTime);
+        camera.HandleGroundMovement(MOVE_RIGHT, deltaTime);
     }
 
     if (inputManager.isActionActive(Action::SPRINT))
-        camera.HandleMovement(SPRINT, deltaTime);
+        camera.HandleGroundMovement(SPRINT, deltaTime);
     else
-        camera.HandleMovement(WALK, deltaTime);
+        camera.HandleGroundMovement(WALK, deltaTime);
 
     if (inputManager.isActionJustPressed(Action::HIT))
         std::cout << "Hit" << std::endl;
@@ -72,4 +81,32 @@ void PlayerController::handleGroundMovement(float deltaTime) {
 
     if (inputManager.isActionJustPressed(Action::INTERACT))
         std::cout << "Interact" << std::endl;
+}
+
+void PlayerController::handleFlyingMovement(float deltaTime) {
+    if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
+        std::cout << "God Mode Deactivated" << std::endl;
+        isGodModeActive = false;
+    }
+
+    if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
+        camera.HandleFlyingMovement(MOVE_FORWARD, deltaTime);
+    }
+
+    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) {
+        camera.HandleFlyingMovement(MOVE_BACKWARD, deltaTime);
+    }
+
+    if (inputManager.isActionActive(Action::MOVE_LEFT)) {
+        camera.HandleFlyingMovement(MOVE_LEFT, deltaTime);
+    }
+
+    if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
+        camera.HandleFlyingMovement(MOVE_RIGHT, deltaTime);
+    }
+
+    if (inputManager.isActionActive(Action::SPRINT))
+        camera.HandleFlyingMovement(SPRINT, deltaTime);
+    else
+        camera.HandleFlyingMovement(WALK, deltaTime);
 }

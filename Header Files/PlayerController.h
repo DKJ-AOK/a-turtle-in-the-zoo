@@ -18,6 +18,9 @@ class PlayerController {
     bool isGrounded = false;
     float groundLevel = 0.0f; // Temporary until collision is added.
 
+    // God Mode
+    bool isGodModeActive = false;
+
     PlayerController(InputManager& inputManagerRef, int screenWidth, int screenHeight)
     : camera(screenWidth, screenHeight, glm::vec3(0.0f, 10.0f, 5.0f)), inputManager(inputManagerRef) {};
 
@@ -25,6 +28,7 @@ class PlayerController {
 
 private:
     void handleGroundMovement(float deltaTime);
+    void handleFlyingMovement(float deltaTime);
     void applyPhysics(float deltaTime);
 };
 
