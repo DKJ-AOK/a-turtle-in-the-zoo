@@ -35,6 +35,7 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Source Files/InputManager.cpp"
         "Header Files/PlayerController.h"
         "Source Files/PlayerController.cpp"
+        "Header Files/Physics.h"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

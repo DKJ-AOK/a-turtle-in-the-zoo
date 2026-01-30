@@ -4,6 +4,8 @@
 
 #include "../Header Files/PlayerController.h"
 
+#include "../Header Files/Physics.h"
+
 void PlayerController::update(float deltaTime) {
     // 1. Rotation (Mouse)
     camera.HandleRotation(inputManager.getMouseDeltaX(), inputManager.getMouseDeltaY());
@@ -26,8 +28,30 @@ void PlayerController::applyPhysics(float deltaTime) {
     // Add Gravity to the vertical speed
     if (!isGrounded)
         verticalVelocity += gravity * deltaTime;
-    else
-        verticalVelocity = 0.0f;
+
+    // Update position based on speed
+    auto previousY = camera.Position.y;
+    camera.Position.y += verticalVelocity * deltaTime;
+
+    // Generate Box on new Position
+    AABB playerBox = AABB::fromCenter(camera.Position, playerHalfExtent);
+
+    // Check for Collision
+    isGrounded = false;
+
+
+    if (world.checkCollision(playerBox)) {
+
+        if (verticalVelocity < 0) {
+            camera.Position.y = previousY;
+            verticalVelocity = 0.0f;
+            isGrounded = true;
+        } else {
+            // If Hitting the ceiling
+            camera.Position.y = previousY;
+            verticalVelocity = 0.0f;
+        }
+    }
 
     // Jump Logic
     if (inputManager.isActionJustPressed(Action::JUMP) && isGrounded) {
@@ -36,12 +60,10 @@ void PlayerController::applyPhysics(float deltaTime) {
         isGrounded = false;
     }
 
-    // Update position based on speed
-    camera.Position.y += verticalVelocity * deltaTime;
-
     // Simple ground-check
     if (camera.Position.y <= groundLevel) {
         camera.Position.y = groundLevel;
+        verticalVelocity = 0.0f;
         isGrounded = true;
     }
 }
@@ -55,25 +77,25 @@ void PlayerController::handleGroundMovement(float deltaTime) {
     }
 
     if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
-        camera.HandleGroundMovement(MOVE_FORWARD, deltaTime);
+        camera.HandleGroundMovement(MOVE_FORWARD, deltaTime, world, playerHalfExtent);
     }
 
     if (inputManager.isActionActive(Action::MOVE_BACKWARD)) {
-        camera.HandleGroundMovement(MOVE_BACKWARD, deltaTime);
+        camera.HandleGroundMovement(MOVE_BACKWARD, deltaTime, world, playerHalfExtent);
     }
 
     if (inputManager.isActionActive(Action::MOVE_LEFT)) {
-        camera.HandleGroundMovement(MOVE_LEFT, deltaTime);
+        camera.HandleGroundMovement(MOVE_LEFT, deltaTime, world, playerHalfExtent);
     }
 
     if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
-        camera.HandleGroundMovement(MOVE_RIGHT, deltaTime);
+        camera.HandleGroundMovement(MOVE_RIGHT, deltaTime, world, playerHalfExtent);
     }
 
     if (inputManager.isActionActive(Action::SPRINT))
-        camera.HandleGroundMovement(SPRINT, deltaTime);
+        camera.HandleGroundMovement(SPRINT, deltaTime, world, playerHalfExtent);
     else
-        camera.HandleGroundMovement(WALK, deltaTime);
+        camera.HandleGroundMovement(WALK, deltaTime, world, playerHalfExtent);
 
     if (inputManager.isActionJustPressed(Action::HIT))
         std::cout << "Hit" << std::endl;

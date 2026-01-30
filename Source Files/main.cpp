@@ -126,7 +126,7 @@ int main() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	InputManager inputManager(screenWidth, screenHeight);
-	PlayerController playerController(inputManager, screenWidth, screenHeight);
+	PlayerController playerController(inputManager, world, screenWidth, screenHeight);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	float deltaTime = 0.0f;

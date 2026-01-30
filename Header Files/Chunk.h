@@ -53,7 +53,7 @@ class Chunk {
 public:
     static constexpr int SIZE_X_Z = 16;
     static constexpr int SIZE_Y = 256;
-    static constexpr float BLOCK_SCALE = 0.4f;
+    static constexpr float BLOCK_SCALE = 1.0f;
     BlockType blocks[SIZE_X_Z][SIZE_Y][SIZE_X_Z]{};
     glm::ivec3 position;
 

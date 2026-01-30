@@ -15,13 +15,14 @@
 
 #include "InputManager.h"
 #include "shaderClass.h"
+#include "World.h"
 
 class Camera {
 public:
     // Positioning
     glm::vec3 Position;
     glm::vec3 Forward = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 Up      = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 Up      = glm::vec3(0.0f, 1.f, 0.0f);
     glm::vec3 Right   = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::vec3 WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -52,8 +53,12 @@ public:
 
     // Receives data from the InputManager
     void HandleRotation(float moveDeltaX, float moveDeltaY);
-    void HandleGroundMovement(Action action, float deltaTime);
+    void HandleGroundMovement(Action action, float deltaTime, World& world, glm::vec3 playerHalfExtent);
     void HandleFlyingMovement(Action action, float deltaTime);
+
+private:
+    void HandleMovementXAxis(Action action, float velocity, float flatForwardX, float flatRightX, World& world, glm::vec3 playerHalfExtent);
+    void HandleMovementZAxis(Action action, float velocity, float flatForwardZ, float flatRightZ, World& world, glm::vec3 playerHalfExtent);
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_CAMERA_H

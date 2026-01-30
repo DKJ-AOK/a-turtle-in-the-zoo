@@ -1,5 +1,7 @@
 ﻿#include "../Header Files/Camera.h"
 
+#include "../Header Files/Physics.h"
+
 Camera::Camera(int width, int height, glm::vec3 position) {
     Camera::width = width;
     Camera::height = height;
@@ -27,7 +29,10 @@ void Camera::UpdateMatrix(float FOV, float nearPlane, float farPlane) {
     glm::mat4 projection = glm::mat4(1.0f);
 
     // Makes camera look in the right direction from the right position
-    view = glm::lookAt(Position, Position + Forward, Up);
+    float eyeOffset = 0.8f;
+    glm::vec3 eyePos = Position + glm::vec3(0.0f, eyeOffset, 0.0f);
+
+    view = glm::lookAt(eyePos, eyePos + Forward, Up);
     // Adds perspective to the scene
     projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, nearPlane, farPlane);
 
@@ -51,25 +56,55 @@ void Camera::HandleRotation(float moveDeltaX, float moveDeltaY) {
     UpdateCameraVectors();
 }
 
-void Camera::HandleGroundMovement(Action action, float deltaTime) {
+void Camera::HandleGroundMovement(Action action, float deltaTime, World& world, glm::vec3 playerHalfExtent) {
     float velocity = Speed * deltaTime;
 
     // For landscape-movement (NOT IN USE YET)
     glm::vec3 flatForward = glm::normalize(glm::vec3(Forward.x, 0.0f, Forward.z));
     glm::vec3 flatRight = glm::normalize(glm::vec3(Right.x, 0.0f, Right.z));
+    auto previousPosition = Position;
 
-    if (action == Action::MOVE_FORWARD)
-        Position += flatForward * velocity;
-    if (action == Action::MOVE_BACKWARD)
-        Position -= flatForward * velocity;
-    if (action == Action::MOVE_LEFT)
-        Position -= flatRight * velocity;
-    if (action == Action::MOVE_RIGHT)
-        Position += flatRight * velocity;
     if (action == Action::SPRINT)
         Speed = SprintSpeed;
     if (action == Action::WALK)
         Speed = WalkSpeed;
+
+    HandleMovementXAxis(action, velocity, flatForward.x, flatRight.x, world, playerHalfExtent);
+    HandleMovementZAxis(action, velocity, flatForward.z, flatRight.z, world, playerHalfExtent);
+}
+
+void Camera::HandleMovementXAxis(Action action, float velocity, float flatForwardX, float flatRightX, World &world, glm::vec3 playerHalfExtent) {
+    auto previousPositionX = Position.x;
+
+    if (action == Action::MOVE_FORWARD)
+        Position.x += flatForwardX * velocity;
+    if (action == Action::MOVE_BACKWARD)
+        Position.x -= flatForwardX * velocity;
+    if (action == Action::MOVE_LEFT)
+        Position.x -= flatRightX * velocity;
+    if (action == Action::MOVE_RIGHT)
+        Position.x += flatRightX * velocity;
+
+    AABB playerBox = AABB::fromCenter(Position, playerHalfExtent);
+    if (world.checkCollision(playerBox))
+        Position.x = previousPositionX;
+}
+
+void Camera::HandleMovementZAxis(Action action, float velocity, float flatForwardZ, float flatRightZ, World &world, glm::vec3 playerHalfExtent) {
+    auto previousPositionZ = Position.z;
+
+    if (action == Action::MOVE_FORWARD)
+        Position.z += flatForwardZ * velocity;
+    if (action == Action::MOVE_BACKWARD)
+        Position.z -= flatForwardZ * velocity;
+    if (action == Action::MOVE_LEFT)
+        Position.z -= flatRightZ * velocity;
+    if (action == Action::MOVE_RIGHT)
+        Position.z += flatRightZ * velocity;
+
+    AABB playerBox = AABB::fromCenter(Position, playerHalfExtent);
+    if (world.checkCollision(playerBox))
+        Position.z = previousPositionZ;
 }
 
 void Camera::HandleFlyingMovement(Action action, float deltaTime) {
@@ -88,75 +123,3 @@ void Camera::HandleFlyingMovement(Action action, float deltaTime) {
     if (action == Action::WALK)
         Speed = WalkSpeed;
 }
-
-// void Camera::Inputs(GLFWwindow *window) {
-//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-//         Position += speed * Orientation;
-//     }
-//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-//         Position += speed * -glm::normalize(glm::cross(Orientation, Up));
-//     }
-//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-//         Position += speed * -Orientation;
-//     }
-//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-//         Position += speed * glm::normalize(glm::cross(Orientation, Up));
-//     }
-//     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-//         Position += speed * Up;
-//     }
-//     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-//         Position += speed * -Up;
-//     }
-//     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-//         speed = 0.4f;
-//     }
-//     else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
-//         speed = 0.05f;
-//     }
-//
-//     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-//         // Hides mouse cursor
-//         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-//
-//         // Prevents camera from jumping on the first click
-//         if (firstClick)
-//         {
-//             glfwSetCursorPos(window, width / 2, height / 2);
-//             firstClick = false;
-//         }
-//
-//         // Stores the coordinates of the cursor
-//         double mouseX;
-//         double mouseY;
-//         // Fetches the coordinates of the cursor
-//         glfwGetCursorPos(window, &mouseX, &mouseY);
-//
-//         // Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
-//         // and then "transforms" them into degrees
-//         float rotX = sensitivity * static_cast<float>(mouseY - (height / 2)) / height;
-//         float rotY = sensitivity * static_cast<float>(mouseX - (width / 2)) / width;
-//
-//         // Calculates upcoming vertical change in the Orientation
-//         glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
-//
-//         // Decides whether the next vertical Orientation is legal or not
-//         if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
-//         {
-//             Orientation = newOrientation;
-//         }
-//
-//         // Rotates the Orientation left and right
-//         Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
-//
-//         // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-//         glfwSetCursorPos(window, (width / 2), (height / 2));
-//     }
-//     else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
-//     {
-//         // Unhides cursor since camera is not looking around anymore
-//         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-//         // Makes sure the next time the camera looks around it doesn't jump
-//         firstClick = true;
-//     }
-// }

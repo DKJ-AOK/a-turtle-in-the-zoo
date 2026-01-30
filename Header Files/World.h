@@ -13,6 +13,8 @@
 #include <atomic>
 #include <glm/vec2.hpp>
 
+#include "Physics.h"
+
 struct MeshData;
 struct ChunkData;
 enum BlockType : int; // Forward declare the enum
@@ -42,6 +44,11 @@ public:
     BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
 
     bool isFaceVisible(glm::ivec3 worldPos, glm::ivec3 dir, BlockType currentBlock);
+
+    // Collision Check
+    bool checkCollision(const AABB& playerBox);
+    static bool intersect(const AABB& a, const AABB& b);
+    static AABB getBlockAABB(int x, int y, int z);
 
 private:
     std::map<std::pair<int, int>, ChunkData> chunks;
