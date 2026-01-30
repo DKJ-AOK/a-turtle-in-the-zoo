@@ -13,6 +13,7 @@
 #include <atomic>
 #include <glm/vec2.hpp>
 #include <memory>
+#include <shared_mutex>
 
 #include "Physics.h"
 
@@ -47,7 +48,7 @@ public:
     bool isFaceVisible(glm::ivec3 worldPos, glm::ivec3 dir, BlockType currentBlock);
 
     // Collision Check
-    bool checkCollision(const AABB& playerBox, AABB& cubeOutBox);
+    bool checkCollision(const AABB& playerBox, AABB& cubeOutBox) const;
     static bool intersect(const AABB& a, const AABB& b);
     static AABB getBlockAABB(int x, int y, int z);
 
@@ -57,7 +58,7 @@ private:
     std::uint32_t seed;
     int renderDistance = 16;
     std::queue<glm::ivec3> chunksToGenerate;
-    mutable std::mutex chunksMutex;
+    mutable std::shared_mutex chunksMutex;
 
     void AddChunkToGenerate(glm::ivec2 pos);
 
