@@ -56,15 +56,16 @@ void Camera::HandleMovement(Action action, float deltaTime) {
 
     // For landscape-movement (NOT IN USE YET)
     glm::vec3 flatForward = glm::normalize(glm::vec3(Forward.x, 0.0f, Forward.z));
+    glm::vec3 flatRight = glm::normalize(glm::vec3(Right.x, 0.0f, Right.z));
 
     if (action == Action::MOVE_FORWARD)
-        Position += Forward * velocity;
+        Position += flatForward * velocity;
     if (action == Action::MOVE_BACKWARD)
-        Position -= Forward * velocity;
+        Position -= flatForward * velocity;
     if (action == Action::MOVE_LEFT)
-        Position -= Right * velocity;
+        Position -= flatRight * velocity;
     if (action == Action::MOVE_RIGHT)
-        Position += Right * velocity;
+        Position += flatRight * velocity;
     if (action == Action::SPRINT)
         Speed = SprintSpeed;
     if (action == Action::WALK)
