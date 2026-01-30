@@ -17,8 +17,8 @@ namespace fs = std::filesystem;
 #include"../Header Files/InputManager.h"
 
 
-const unsigned int screenWidth = 1600;
-const unsigned int screenHeight = 1200;
+const unsigned int width = 1200;
+const unsigned int height = 800;
 
 Vertex lightVertices[] =
 { //     COORDINATES     //
@@ -89,7 +89,7 @@ int main() {
 	Shader shaderProgram("../Resource Files/Shaders/default.vert", "../Resource Files/Shaders/default.frag");
 
 	Texture blockTextures[] {
-		Texture("../TextureSheet.png", "diffuse", 0, GL_RGB, GL_UNSIGNED_BYTE),
+		Texture("../TextureSheet.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE),
 	};
 	std::vector blockTex(blockTextures, blockTextures + sizeof(blockTextures) / sizeof(Texture));
 
@@ -118,10 +118,6 @@ int main() {
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	glEnable(GL_DEPTH_TEST);
-
-	// Original code from the tutorial
-	/*Texture popCat("pop_cat.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	popCat.texUnit(shaderProgram, "tex0", 0);*/
 
 	InputManager inputManager(screenWidth, screenHeight);
 	PlayerController playerController(inputManager, screenWidth, screenHeight);
