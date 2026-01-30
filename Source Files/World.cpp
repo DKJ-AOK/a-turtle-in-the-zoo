@@ -283,7 +283,7 @@ void World::workerLoop() {
     }
 }
 
-bool World::checkCollision(const AABB &playerBox) {
+bool World::checkCollision(const AABB &playerBox, AABB& cubeOutBox) {
     // Find min/max Coordinates in grid-units
     int minX = std::floor(playerBox.min.x / Chunk::BLOCK_SCALE);
     int maxX = std::ceil(playerBox.max.x / Chunk::BLOCK_SCALE);
@@ -302,8 +302,10 @@ bool World::checkCollision(const AABB &playerBox) {
                     // Generate AABB for the block
                     AABB blockAABB = getBlockAABB(x, y, z);
 
-                    if (intersect(playerBox, blockAABB))
+                    if (intersect(playerBox, blockAABB)) {
+                        cubeOutBox = blockAABB;
                         return true;
+                    }
                 }
             }
         }

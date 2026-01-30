@@ -47,7 +47,7 @@ public:
     bool isFaceVisible(glm::ivec3 worldPos, glm::ivec3 dir, BlockType currentBlock);
 
     // Collision Check
-    bool checkCollision(const AABB& playerBox);
+    bool checkCollision(const AABB& playerBox, AABB& cubeOutBox);
     static bool intersect(const AABB& a, const AABB& b);
     static AABB getBlockAABB(int x, int y, int z);
 

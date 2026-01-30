@@ -25,44 +25,52 @@ void PlayerController::update(float deltaTime) {
 }
 
 void PlayerController::applyPhysics(float deltaTime) {
-    // Add Gravity to the vertical speed
-    if (!isGrounded)
-        verticalVelocity += gravity * deltaTime;
-
-    // Update position based on speed
-    auto previousY = camera.Position.y;
-    camera.Position.y += verticalVelocity * deltaTime;
-
-    // Generate Box on new Position
-    AABB playerBox = AABB::fromCenter(camera.Position, playerHalfExtent);
-
-    // Check for Collision
-    isGrounded = false;
-
-
-    if (world.checkCollision(playerBox)) {
-
-        if (verticalVelocity < 0) {
-            camera.Position.y = previousY;
-            verticalVelocity = 0.0f;
-            isGrounded = true;
-        } else {
-            // If Hitting the ceiling
-            camera.Position.y = previousY;
-            verticalVelocity = 0.0f;
-        }
-    }
-
-    // Jump Logic
+    // 1. JUMP LOGIC (Vi tjekker på værdien fra SIDSTE frame)
     if (inputManager.isActionJustPressed(Action::JUMP) && isGrounded) {
-        std::cout << "Jump" << std::endl;
         verticalVelocity = jumpForce;
         isGrounded = false;
     }
 
-    // Simple ground-check
+    // 2. TYNGDEKRAFT
+    if (!isGrounded) {
+        verticalVelocity += gravity * deltaTime;
+    }
+
+    // 3. BEVÆGELSE
+    camera.Position.y += verticalVelocity * deltaTime;
+
+    // 4. ÆGTE KOLLISION (Brug den rigtige størrelse her!)
+    AABB actualBox = AABB::fromCenter(camera.Position, playerHalfExtent);
+    AABB cubeBox;
+
+    if (world.checkCollision(actualBox, cubeBox)) {
+        if (verticalVelocity < 0) { // Falder ned i gulv
+            camera.Position.y = cubeBox.max.y + playerHalfExtent.y + 0.001f;
+            verticalVelocity = 0.0f;
+            isGrounded = true;
+        }
+        else if (verticalVelocity > 0) { // Rammer loftet
+            camera.Position.y = cubeBox.min.y - playerHalfExtent.y - 0.001f;
+            verticalVelocity = 0.0f;
+        }
+    } else {
+        // 5. GROUND PROBE (Kun hvis vi ikke allerede har fundet en kollision)
+        // Her tjekker vi om vi er "tæt nok" på jorden til at kunne hoppe
+        AABB groundProbe = actualBox;
+        groundProbe.min.y -= 0.05f;
+
+        if (world.checkCollision(groundProbe, cubeBox)) {
+            isGrounded = true;
+            // Vi nulstiller ikke hastigheden her, så tyngdekraften
+            // stadig trækker os helt ned til "ægte" kollision
+        } else {
+            isGrounded = false;
+        }
+    }
+
+    // 6. EMERGENCY GROUND LEVEL
     if (camera.Position.y <= groundLevel) {
-        camera.Position.y = groundLevel;
+        camera.Position.y = groundLevel + playerHalfExtent.y;
         verticalVelocity = 0.0f;
         isGrounded = true;
     }
