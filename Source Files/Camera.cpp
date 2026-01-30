@@ -86,7 +86,8 @@ void Camera::HandleMovementXAxis(Action action, float velocity, float flatForwar
         Position.x += flatRightX * velocity;
 
     AABB playerBox = AABB::fromCenter(Position, playerHalfExtent);
-    if (world.checkCollision(playerBox))
+    AABB cubeBox;
+    if (world.checkCollision(playerBox, cubeBox))
         Position.x = previousPositionX;
 }
 
@@ -103,7 +104,8 @@ void Camera::HandleMovementZAxis(Action action, float velocity, float flatForwar
         Position.z += flatRightZ * velocity;
 
     AABB playerBox = AABB::fromCenter(Position, playerHalfExtent);
-    if (world.checkCollision(playerBox))
+    AABB cubeBox;
+    if (world.checkCollision(playerBox, cubeBox))
         Position.z = previousPositionZ;
 }
 
