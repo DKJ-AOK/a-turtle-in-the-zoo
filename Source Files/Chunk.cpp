@@ -7,26 +7,34 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
             const auto worldX = static_cast<double>(pos.x * SIZE_X_Z + x);
             const auto worldZ = static_cast<double>(pos.z * SIZE_X_Z + z);
 
-            const auto biome = getBiomeAtWorldPosition(glm::ivec2(worldX, worldZ), seed);
+            const auto weights = getBiomeWeightsAtWorldPosition(glm::ivec2(worldX, worldZ), seed);
 
             // Map to height
-            const auto height = getNoiseHeightAtWorldPosition(glm::ivec2(worldX, worldZ), seed, biome);
+            const auto height = getNoiseHeightAtWorldPosition(glm::ivec2(worldX, worldZ), seed, weights);
+
+            // Determine primary biome for block selection
+            BlockType surfaceBlock = GRASS;
+            BlockType subSurfaceBlock = DIRT;
+
+            if (weights.desert > weights.plains && weights.desert > weights.mountain && weights.desert > weights.snowyTaiga) {
+                surfaceBlock = SAND;
+                subSurfaceBlock = SAND;
+            } else if (weights.snowyTaiga > weights.plains && weights.snowyTaiga > weights.mountain && weights.snowyTaiga > weights.desert) {
+                surfaceBlock = SNOWY_GRASS;
+                subSurfaceBlock = DIRT;
+            } else if (weights.mountain > weights.plains && weights.mountain > weights.desert && weights.mountain > weights.snowyTaiga) {
+                surfaceBlock = STONE;
+                subSurfaceBlock = STONE;
+            }
 
             for (int y = 0; y < SIZE_Y; y++) {
-                if (y < height - 10) {
+                if (y < height - 4) {
                     blocks[x][y][z] = STONE;
-                }
-                if (biome == PLANES || biome == SNOWY_TAIGA) {
-                    if (y < height) {
-                        blocks[x][y][z] = DIRT;
-                    } else if (y == height) {
-                        blocks[x][y][z] = biome == PLANES ? GRASS : SNOWY_GRASS;
-                    }
-                }
-                else if (biome == DESSERT && y <= height) {
-                    blocks[x][y][z] = SAND;
-                }
-                else {
+                } else if (y < height) {
+                    blocks[x][y][z] = subSurfaceBlock;
+                } else if (y == height) {
+                    blocks[x][y][z] = surfaceBlock;
+                } else {
                     blocks[x][y][z] = AIR;
                 }
             }
@@ -34,39 +42,28 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
     }
 }
 
-int Chunk::getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome biome) {
-    // Initialize the Perlin Noise object with a seed
+int Chunk::getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, const BiomeWeights& weights) const {
     static const siv::PerlinNoise perlin{ seed };
 
-    float frequency;     // Lower values = smoother hills
-    int octaves;         // More octaves = more detail/jaggedness
-    int surfaceHeight = 20;   // Base height
+    double hPlains = 0, hMountain = 0, hDesert = 0, hSnowyTaiga = 0;
 
-    switch (biome) {
-        case PLANES:
-        case DESSERT:
-        case SNOWY_TAIGA:
-            frequency = 0.025f;
-            octaves = 4;
-            break;
-        default:
-            frequency = 0.0f;
-            octaves = 1;
-            surfaceHeight = 0;
-            break;
-    }
+    if (weights.plains > 0)
+        hPlains = plains.baseHeight + perlin.octave2D_01(pos.x * plains.frequency, pos.y * plains.frequency, plains.octaves) * plains.baseHeight;
+    if (weights.mountain > 0)
+        hMountain = mountain.baseHeight + perlin.octave2D_01(pos.x * mountain.frequency, pos.y * mountain.frequency, mountain.octaves) * mountain.baseHeight;
+    if (weights.desert > 0)
+        hDesert = desert.baseHeight + perlin.octave2D_01(pos.x * desert.frequency, pos.y * desert.frequency, desert.octaves) * desert.baseHeight;
+    if (weights.snowyTaiga > 0)
+        hSnowyTaiga = snowyTaiga.baseHeight + perlin.octave2D_01(pos.x * snowyTaiga.frequency, pos.y * snowyTaiga.frequency, snowyTaiga.octaves) * snowyTaiga.baseHeight;
 
-    // Generate noise value between 0.0 and 1.0
-    // octave2D_01 handles multiple layers of noise for you
-    const double noise = perlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves);
+    float finalHeight = (hPlains * weights.plains) + (hMountain * weights.mountain) + (hDesert * weights.desert) + (hSnowyTaiga * weights.snowyTaiga);
 
-    // Map to height
-    return surfaceHeight + static_cast<int>(noise * surfaceHeight);
+    return static_cast<int>(finalHeight);
 }
 
-Biome Chunk::getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) {
-    constexpr float frequency = 0.002f;     // Lower values = smoother hills
-    constexpr int octaves = 4;             // More octaves = more detail/jaggedness
+BiomeWeights Chunk::getBiomeWeightsAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) {
+    constexpr float frequency = 0.002f;
+    constexpr int octaves = 4;
 
     std::mt19937 rng{seed};
     const uint32_t humiditySeed = rng();
@@ -78,14 +75,28 @@ Biome Chunk::getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed) {
     const double humidity = humidityPerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves);
     const double temperature = temperaturePerlin.octave2D_01(pos.x * frequency, pos.y * frequency, octaves);
 
-    if (humidity <= 0.3f && temperature >= 0.7f) {
-        return DESSERT;
-    }
-    if (humidity >= 0.7f && temperature <= 0.2f) {
-        return SNOWY_TAIGA;
-    }
+    auto smoothstep = [](float edge0, float edge1, float x) {
+        float t = std::clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+        return t * t * (3.0f - 2.0f * t);
+    };
 
-    return PLANES;
+    // Define biome regions and calculate weights
+    // Desert: Low humidity, high temperature
+    float wDesert = (1.0f - smoothstep(0.3f, 0.5f, humidity)) * smoothstep(0.5f, 0.7f, temperature);
+
+    // Snowy Taiga: High humidity, low temperature
+    float wSnowyTaiga = smoothstep(0.5f, 0.7f, humidity) * (1.0f - smoothstep(0.2f, 0.4f, temperature));
+    
+    // Mountains: Low humidity, medium/low temperature
+    float wMountain = smoothstep(0.4f, 0.6f, humidity) * (1.0f - smoothstep(0.3f, 0.5f, temperature));
+
+    // Plains: Default biome, fill the rest
+    float wPlains = 1.0f - std::max({wDesert, wSnowyTaiga, wMountain});
+    wPlains = std::max(0.0f, wPlains);
+
+    // Normalize weights so they sum to 1
+    float total = wDesert + wSnowyTaiga + wMountain + wPlains;
+    return { wPlains / total, wMountain / total, wDesert / total, wSnowyTaiga / total };
 }
 
 void Chunk::addFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, const glm::vec3 pos, const int faceDir, const BlockType type) {

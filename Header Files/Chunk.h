@@ -31,6 +31,19 @@ struct MeshData {
     std::vector<GLuint> indices;
 };
 
+struct BiomeSettings {
+    float frequency;
+    int octaves;
+    int baseHeight;
+};
+
+struct BiomeWeights {
+    float plains;
+    float mountain;
+    float desert;
+    float snowyTaiga;
+};
+
 class Chunk {
 public:
     static constexpr int SIZE_X_Z = 16;
@@ -49,8 +62,13 @@ private:
     static UVRect getUVsForCoordinates(int column, int row);
     static UVRect getUVs(BlockType type, int faceDir);
 
-    [[nodiscard]] static int getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, Biome biome);
-    [[nodiscard]] static Biome getBiomeAtWorldPosition(glm::ivec2 pos, std::uint32_t seed);
+    [[nodiscard]] int getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, const BiomeWeights& weights) const;
+    [[nodiscard]] static BiomeWeights getBiomeWeightsAtWorldPosition(glm::ivec2 pos, std::uint32_t seed);
+
+    BiomeSettings plains   = { 0.025f, 4, 20 };
+    BiomeSettings mountain = { 0.050f, 6, 60 };
+    BiomeSettings desert   = { 0.020f, 3, 15 };
+    BiomeSettings snowyTaiga = { 0.025f, 4, 25 };
 };
 
 struct ChunkData {
