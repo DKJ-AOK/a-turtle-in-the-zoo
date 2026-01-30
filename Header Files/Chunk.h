@@ -18,7 +18,7 @@ enum BlockType {
 enum Biome {
     PLANES = 0,
     DESSERT = 1,
-    MOUNTAINS = 2,
+    MOUNTAINS = 2, // TODO: Make this
     SNOWY_TAIGA = 3
 };
 
