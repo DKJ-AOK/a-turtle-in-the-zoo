@@ -20,6 +20,7 @@ World::~World() {
     for (auto& pair : chunks) {
         delete pair.second.opaqueMesh;
         delete pair.second.transparentMesh;
+        delete pair.second.crossQuadMesh;
     }
     chunks.clear();
 
@@ -43,7 +44,7 @@ void World::updateChunks(const glm::vec3 cameraPos) {
             // Only create if it doesn't exist
             bool exists;
             {
-                std::lock_guard lock(chunksMutex);
+                std::shared_lock lock(chunksMutex);
                 exists = (chunks.contains({x, z}));
             }
             if (!exists) {
@@ -64,7 +65,7 @@ void World::updateChunks(const glm::vec3 cameraPos) {
             if (std::abs(dx) > radius + 2 || std::abs(dz) > radius + 2) {
                 // Since we use shared_ptr, it is safe to erase it from the map.
                 // If a worker thread is currently meshing it, it will keep a reference.
-                
+
                 delete it->second.opaqueMesh;
                 delete it->second.transparentMesh;
                 it = chunks.erase(it);   // Remove from map and get next iterator
@@ -81,27 +82,30 @@ void World::updateChunks(const glm::vec3 cameraPos) {
         completedChunks.clear();
     }
 
-    for (auto& item : localCompleted) {
+    for (auto&[pos, chunk, meshData] : localCompleted) {
         // This part happens on the MAIN THREAD (OpenGL safe!)
-        const auto newOpaqueMesh = new Mesh(item.meshData->opaqueVertices, item.meshData->opaqueIndices, textures);
-        const auto newTransparentMesh = new Mesh(item.meshData->transparentVertices, item.meshData->transparentIndices, textures);
-        delete item.meshData;
+        const auto newOpaqueMesh = new Mesh(meshData->opaqueShapes.vertices, meshData->opaqueShapes.indices, textures);
+        const auto newTransparentMesh = new Mesh(meshData->transparentShapes.vertices, meshData->transparentShapes.indices, textures);
+        const auto newCrossQuadMesh = new Mesh(meshData->crossQuadShapes.vertices, meshData->crossQuadShapes.indices, textures);
+        delete meshData;
 
         std::lock_guard lock(chunksMutex);
-        if (auto it = chunks.find({item.pos.x, item.pos.z}); it != chunks.end()) {
+        if (auto it = chunks.find({pos.x, pos.z}); it != chunks.end()) {
             auto& entry = it->second;
             delete entry.opaqueMesh;
             delete entry.transparentMesh;
+            delete entry.crossQuadMesh;
 
-            entry.chunk = std::move(item.chunk);
+            entry.chunk = std::move(chunk);
             entry.opaqueMesh = newOpaqueMesh;
             entry.transparentMesh = newTransparentMesh;
+            entry.crossQuadMesh = newCrossQuadMesh;
 
             // If this was a new chunk, trigger rebuild of neighbors to fix boundary faces
-            if (item.pos.y == 0) {
+            if (pos.y == 0) {
                 const glm::ivec2 neighbors[] = {
-                    {item.pos.x + 1, item.pos.z}, {item.pos.x - 1, item.pos.z},
-                    {item.pos.x, item.pos.z + 1}, {item.pos.x, item.pos.z - 1}
+                    {pos.x + 1, pos.z}, {pos.x - 1, pos.z},
+                    {pos.x, pos.z + 1}, {pos.x, pos.z - 1}
                 };
 
                 for (const auto& neighborPos : neighbors) {
@@ -136,7 +140,7 @@ void World::draw(Shader& shader, Camera& camera) const {
     auto model = glm::mat4(1.0f);
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-    std::lock_guard lock(chunksMutex);
+    std::shared_lock lock(chunksMutex);
 
     // Opaque blocks
     for (auto& pair : chunks) {
@@ -144,6 +148,15 @@ void World::draw(Shader& shader, Camera& camera) const {
             pair.second.opaqueMesh->Draw(shader, camera);
         }
     }
+
+    // CrossQuad blocks
+    glDisable(GL_CULL_FACE);
+    for (auto& pair : chunks) {
+        if (pair.second.crossQuadMesh) {
+            pair.second.crossQuadMesh->Draw(shader, camera);
+        }
+    }
+    glEnable(GL_CULL_FACE);
 
     // Transparent blocks
     glDepthMask(GL_FALSE); // Disable writing to depth buffer for water
@@ -163,7 +176,7 @@ bool World::isFaceVisible(const glm::ivec3 worldPos, const glm::ivec3 dir, const
     const int chunkX = std::floor(static_cast<float>(neighborPos.x) / Chunk::SIZE_X_Z);
     const int chunkZ = std::floor(static_cast<float>(neighborPos.z) / Chunk::SIZE_X_Z);
 
-    std::lock_guard lock(chunksMutex);
+    std::shared_lock lock(chunksMutex);
     if (const auto it = chunks.find({chunkX, chunkZ}); it != chunks.end() && it->second.chunk) {
         const auto neighborBlock = it->second.chunk->getBlockTypeAtWorldPosition(neighborPos);
 
@@ -216,9 +229,9 @@ BlockType World::removeBlockAtWorldPosition(glm::ivec3 pos) {
         // We call the internal update directly to avoid double locking or use a helper
         it->second.chunk->addBlockAtWorldPosition(pos, AIR);
         it->second.isModified = true;
-        
+
         std::lock_guard qLock(queueMutex);
-        pendingPositions.emplace(chunkPos.x, 1, chunkPos.y); 
+        pendingPositions.emplace(chunkPos.x, 1, chunkPos.y);
         cv.notify_one();
 
         return blockType;
@@ -231,7 +244,7 @@ BlockType World::getBlockTypeAtWorldPosition(glm::ivec3 pos) const {
         std::floor(static_cast<float>(pos.x) / Chunk::SIZE_X_Z),
         std::floor(static_cast<float>(pos.z) / Chunk::SIZE_X_Z));
 
-    std::lock_guard lock(chunksMutex);
+    std::shared_lock lock(chunksMutex);
     const auto it = chunks.find({chunkPos.x, chunkPos.y});
     if (it != chunks.end() && it->second.chunk) {
         return it->second.chunk->getBlockTypeAtWorldPosition(pos);
@@ -257,7 +270,7 @@ void World::workerLoop() {
             targetChunk = std::make_shared<Chunk>(glm::ivec3(task.x, 0, task.z), seed);
         } else {
             // Task: Rebuild Existing Chunk
-            std::lock_guard lock(chunksMutex);
+            std::shared_lock lock(chunksMutex);
             auto it = chunks.find({task.x, task.z});
             if (it != chunks.end() && it->second.chunk != nullptr) {
                 targetChunk = it->second.chunk;
@@ -266,11 +279,11 @@ void World::workerLoop() {
 
         if (targetChunk) {
             MeshData* data = targetChunk->generateMesh(*this);
-            
+
             // Re-check if the chunk still exists in the map before pushing to completed
             // This prevents the race where a chunk is unloaded while the worker is meshing it.
-            
-            std::lock_guard lock(chunksMutex);
+
+            std::shared_lock lock(chunksMutex);
             auto it = chunks.find({task.x, task.z});
             if (it != chunks.end()) {
                 std::lock_guard cLock(completedMutex);
@@ -283,26 +296,43 @@ void World::workerLoop() {
     }
 }
 
-bool World::checkCollision(const AABB &playerBox, AABB& cubeOutBox) {
+bool World::checkCollision(const AABB &playerBox, AABB& cubeOutBox) const {
     // Find min/max Coordinates in grid-units
-    int minX = std::floor(playerBox.min.x / Chunk::BLOCK_SCALE);
-    int maxX = std::ceil(playerBox.max.x / Chunk::BLOCK_SCALE);
-    int minY = std::floor(playerBox.min.y / Chunk::BLOCK_SCALE);
-    int maxY = std::ceil(playerBox.max.y / Chunk::BLOCK_SCALE);
-    int minZ = std::floor(playerBox.min.z / Chunk::BLOCK_SCALE);
-    int maxZ = std::ceil(playerBox.max.z / Chunk::BLOCK_SCALE);
+    const int minX = std::floor(playerBox.min.x / Chunk::BLOCK_SCALE);
+    const int maxX = std::ceil(playerBox.max.x / Chunk::BLOCK_SCALE);
+    const int minY = std::floor(playerBox.min.y / Chunk::BLOCK_SCALE);
+    const int maxY = std::ceil(playerBox.max.y / Chunk::BLOCK_SCALE);
+    const int minZ = std::floor(playerBox.min.z / Chunk::BLOCK_SCALE);
+    const int maxZ = std::ceil(playerBox.max.z / Chunk::BLOCK_SCALE);
+
+    std::shared_lock lock(chunksMutex);
+
+    const Chunk* lastChunk = nullptr;
+    glm::ivec2 lastChunkPos(-9999999, -9999999);
 
     for (int x = minX; x <= maxX; x++) {
-        for (int y = minY; y <= maxY; y++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                if (auto blockTypeAtPos = getBlockTypeAtWorldPosition({x, y, z});
-                    blockTypeAtPos != BlockType::AIR &&
-                    blockTypeAtPos != BlockType::WATER) {
+        for (int z = minZ; z <= maxZ; z++) {
+            const int chunkX = std::floor(static_cast<float>(x) / Chunk::SIZE_X_Z);
+            const int chunkZ = std::floor(static_cast<float>(z) / Chunk::SIZE_X_Z);
+
+            if (!lastChunk || chunkX != lastChunkPos.x || chunkZ != lastChunkPos.y) {
+                if (const auto it = chunks.find({chunkX, chunkZ}); it != chunks.end() && it->second.chunk) {
+                    lastChunk = it->second.chunk.get();
+                    lastChunkPos = {chunkX, chunkZ};
+                } else {
+                    lastChunk = nullptr;
+                }
+            }
+
+            if (!lastChunk) continue;
+
+            for (int y = minY; y <= maxY; y++) {
+                if (const auto blockTypeAtPos = lastChunk->getBlockTypeAtWorldPosition({x, y, z});
+                    std::ranges::all_of(Chunk::NO_COLLISION_BLOCKS, [&](const BlockType noCollisionBlock)
+                    { return noCollisionBlock != blockTypeAtPos; })) {
 
                     // Generate AABB for the block
-                    AABB blockAABB = getBlockAABB(x, y, z);
-
-                    if (intersect(playerBox, blockAABB)) {
+                    if (AABB blockAABB = getBlockAABB(x, y, z); intersect(playerBox, blockAABB)) {
                         cubeOutBox = blockAABB;
                         return true;
                     }

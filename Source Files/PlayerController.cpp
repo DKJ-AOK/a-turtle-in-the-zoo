@@ -21,7 +21,7 @@ void PlayerController::update(float deltaTime) {
         applyPhysics(deltaTime);
 
     // 4. Matrix Update
-    camera.UpdateMatrix(45.0f, 0.1f, 100.0f);
+    camera.UpdateMatrix(45.0f, 0.1f, 200.0f);
 }
 
 void PlayerController::applyPhysics(float deltaTime) {
