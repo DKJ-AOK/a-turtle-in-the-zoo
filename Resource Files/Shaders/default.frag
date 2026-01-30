@@ -51,7 +51,13 @@ vec4 pointLight()
    float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
    float specular = specAmount * specularLight;
 
-   return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
+   // 1. Get the full texture color (including Alpha)
+   vec4 texColor = texture(diffuse0, texCoord);
+
+   // 2. Apply lighting only to RGB, keep texture alpha
+   vec3 lighting = (diffuse * inten + ambient) * lightColor.rgb;
+   float spec = texture(specular0, texCoord).r * specular * inten;
+   return vec4(texColor.rgb * lighting + spec * lightColor.rgb, texColor.a * lightColor.a);
 }
 
 vec4 direcLight()
@@ -71,7 +77,13 @@ vec4 direcLight()
    float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
    float specular = specAmount * specularLight;
 
-   return (texture(diffuse0, texCoord) * (diffuse + ambient) + texture(specular0, texCoord).r * specular) * lightColor;
+   // 1. Get the full texture color (including Alpha)
+   vec4 texColor = texture(diffuse0, texCoord);
+
+   // 2. Apply lighting only to RGB, keep texture alpha
+   vec3 lighting = (diffuse + ambient) * lightColor.rgb;
+   float spec = texture(specular0, texCoord).r * specular;
+   return vec4(texColor.rgb * lighting + spec * lightColor.rgb, texColor.a * lightColor.a);
 }
 
 vec4 spotLight()
@@ -99,12 +111,21 @@ vec4 spotLight()
    float angle = dot(vec3(0.0f, -1.0f, 0.0f), -lightDirection);
    float inten = clamp((angle - outerCone) / (innerCone - outerCone), 0.0f, 1.0f);
 
-   return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
+   // 1. Get the full texture color (including Alpha)
+   vec4 texColor = texture(diffuse0, texCoord);
+
+   // 2. Apply lighting only to RGB, keep texture alpha
+   vec3 lighting = (diffuse * inten + ambient) * lightColor.rgb;
+   float spec = texture(specular0, texCoord).r * specular * inten;
+   return vec4(texColor.rgb * lighting + spec * lightColor.rgb, texColor.a * lightColor.a);
 }
 
 
 void main()
 {
    // outputs final color
-   FragColor = direcLight();
+   vec4 color = direcLight();
+   if(color.a < 0.1)
+       discard;
+   FragColor = color;
 }

@@ -11,8 +11,15 @@
 #include <thread>
 #include <condition_variable>
 #include <atomic>
+#include <glm/vec2.hpp>
 
-#include "Chunk.h"
+struct MeshData;
+struct ChunkData;
+enum BlockType : int; // Forward declare the enum
+class Chunk;
+class Texture;
+class Shader;
+class Camera;
 
 struct CompletedChunk {
     glm::ivec3 pos;
@@ -34,13 +41,15 @@ public:
     BlockType removeBlockAtWorldPosition(glm::ivec3 pos);
     BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
 
+    bool isFaceVisible(glm::ivec3 worldPos, glm::ivec3 dir, BlockType currentBlock);
+
 private:
     std::map<std::pair<int, int>, ChunkData> chunks;
     std::vector<Texture> textures;
     std::uint32_t seed;
     int renderDistance = 16;
     std::queue<glm::ivec3> chunksToGenerate;
-    std::mutex chunksMutex;
+    mutable std::mutex chunksMutex;
 
     void AddChunkToGenerate(glm::ivec2 pos);
 

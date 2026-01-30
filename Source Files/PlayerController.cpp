@@ -50,6 +50,8 @@ void PlayerController::handleGroundMovement(float deltaTime) {
     if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
         std::cout << "God Mode Activated" << std::endl;
         isGodModeActive = true;
+
+        camera.SprintSpeed = 100.0f;
     }
 
     if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
@@ -87,6 +89,8 @@ void PlayerController::handleFlyingMovement(float deltaTime) {
     if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
         std::cout << "God Mode Deactivated" << std::endl;
         isGodModeActive = false;
+
+        camera.SprintSpeed = 10.0f;
     }
 
     if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
