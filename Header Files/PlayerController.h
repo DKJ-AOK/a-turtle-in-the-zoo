@@ -1,6 +1,7 @@
 #ifndef A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H
 #define A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H
 #include "Camera.h"
+#include "InputManager.h"
 #include "Physics.h"
 #include "World.h"
 
