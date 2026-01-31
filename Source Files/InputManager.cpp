@@ -1,13 +1,11 @@
-//
-// Created by Oetho on 29-01-2026.
-//
-
 #include "../Header Files/InputManager.h"
+
+#include <algorithm>
 #include <ranges>
 #include <GLFW/glfw3.h>
 
 
-InputManager::InputManager(double screenWidth, double screenHeight) {
+InputManager::InputManager(const double screenWidth, const double screenHeight) {
     lastX = screenWidth / 2, lastY = screenHeight / 2;
 
     bindKey(MOVE_FORWARD, KEYBOARD, GLFW_KEY_W);
@@ -24,11 +22,13 @@ InputManager::InputManager(double screenWidth, double screenHeight) {
     bindKey(GOD_MODE, KEYBOARD, GLFW_KEY_GRAVE_ACCENT);
 }
 
-void InputManager::bindKey(Action action, InputType inputType, int keyCode) {
-    keyBindings[action].push_back({inputType, keyCode});
+void InputManager::bindKey(const Action action, const InputType inputType, const int keyCode) {
+    const InputBinding binding = {inputType, keyCode};
+    keyBindings[action].push_back(binding);
+    currentKeyStates[binding] = false;
 }
 
-void InputManager::unbindAllKeyBindings(Action action) {
+void InputManager::unbindAllKeyBindings(const Action action) {
     if (keyBindings.contains(action))
         keyBindings[action].clear();
 }
@@ -37,15 +37,11 @@ void InputManager::update(GLFWwindow *window) {
     // KEY INPUTS
     previousKeyStates = currentKeyStates;
 
-    for (const auto &bindingList: keyBindings | std::views::values) {
-        for (const auto& binding : bindingList) {
-            bool pressed = false;
-            if (binding.type == InputType::KEYBOARD) {
-                pressed = (glfwGetKey(window, binding.id) == GLFW_PRESS);
-            } else if (binding.type == InputType::MOUSE_BUTTON) {
-                pressed = (glfwGetMouseButton(window, binding.id) == GLFW_PRESS);
-            }
-            currentKeyStates[binding] = pressed;
+    for (auto& [binding, state] : currentKeyStates) {
+        if (binding.type == InputType::KEYBOARD) {
+            state = (glfwGetKey(window, binding.id) == GLFW_PRESS);
+        } else {
+            state = (glfwGetMouseButton(window, binding.id) == GLFW_PRESS);
         }
     }
 
@@ -66,19 +62,23 @@ void InputManager::update(GLFWwindow *window) {
     lastY = ypos;
 }
 
-bool InputManager::isActionActive(Action action) {
-    for (const auto& binding: keyBindings[action]) {
-        if (currentKeyStates[binding]) return true;
-    }
-    return false;
+bool InputManager::isActionActive(const Action action) {
+    const auto it = keyBindings.find(action);
+    if (it == keyBindings.end()) return false;
+
+    return std::ranges::any_of(it->second, [this](const auto& binding) {
+            return currentKeyStates[binding];
+        });
 }
 
-bool InputManager::isActionJustPressed(Action action) {
-    for (const auto& binding : keyBindings[action]) {
-        if (currentKeyStates[binding] && !previousKeyStates[binding]) return true;
-    }
-    return false;
+bool InputManager::isActionJustPressed(const Action action) {
+    const auto it = keyBindings.find(action);
+    if (it == keyBindings.end()) return false;
+
+    return std::ranges::any_of(it->second, [this](const auto& binding) {
+        return currentKeyStates[binding] && !previousKeyStates[binding];
+    });
 }
 
-float InputManager::getMouseDeltaX(float sensitivity) const { return mouseDeltaX * sensitivity; }
-float InputManager::getMouseDeltaY(float sensitivity) const { return mouseDeltaY * sensitivity; }
+float InputManager::getMouseDeltaX() const { return mouseDeltaX; }
+float InputManager::getMouseDeltaY() const { return mouseDeltaY; }
