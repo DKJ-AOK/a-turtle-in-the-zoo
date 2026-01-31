@@ -1,23 +1,29 @@
-//------- Ignore this ----------
-#include <glad/gl.h>
-#include<filesystem>
-#include "../Header Files/PlayerController.h"
-#include "../Header Files/StateMachine/PlayingState.h"
+// 1. System/Library Includes (ALWAYS FIRST)
+#include <glad/gl.h>      // Glad needs to always be nr. 1
+#include <GLFW/glfw3.h>   // GLFW nr. 2
+#include <filesystem>
+#include <iostream>
+#include <random>
+#include <vector>
+
+// 2. GLM (Mathematics)
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+// 3. Thirdparty tools
+#include <stb_image.h>
+
+// 4. Our Headers
+#include "../Header Files/StateMachine/GameContext.h"
 #include "../Header Files/StateMachine/StateManager.h"
+#include "../Header Files/StateMachine/PlayingState.h"
+#include "../Header Files/PlayerController.h"
+#include "../Header Files/Mesh.h"
+#include "../Header Files/World.h"
+#include "../Header Files/InputManager.h"
+
 namespace fs = std::filesystem;
-//------------------------------
-
-#include<iostream>
-#include<random>
-#include<GLFW/glfw3.h>
-
-#include<glm/glm.hpp>
-#include<glm/gtc/matrix_transform.hpp>
-#include<glm/gtc/type_ptr.hpp>
-#include<stb_image.h>
-#include"../Header Files/Mesh.h"
-#include"../Header Files/World.h"
-#include"../Header Files/InputManager.h"
 
 
 const unsigned int screenWidth = 1200;
@@ -152,9 +158,6 @@ int main() {
 
 		// Updates State of Keybindings
 		stateManager.Update(deltaTime);
-
-		// inputManager.update(window);
-		// playerController.update(deltaTime);
 
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
