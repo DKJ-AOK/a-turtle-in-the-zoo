@@ -1,8 +1,4 @@
-﻿//
-// Created by danie on 25/01/2026.
-//
-
-#ifndef A_TURTLE_IN_THE_ZOO_CAMERA_H
+﻿#ifndef A_TURTLE_IN_THE_ZOO_CAMERA_H
 #define A_TURTLE_IN_THE_ZOO_CAMERA_H
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -12,10 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include<glm/gtx/vector_angle.hpp>
-
-#include "InputManager.h"
 #include "shaderClass.h"
-#include "World.h"
 
 class Camera {
 public:
@@ -43,7 +36,7 @@ public:
     void UpdateMatrix(float FOVdeg, float nearPlane, float farPlane);
 
     // Sends matrix to shader
-    void Matrix(Shader& shader, const char* uniform);
+    void Matrix(const Shader& shader, const char* uniform);
 
     // Receives data from the InputManager
     void HandleRotation(float moveDeltaX, float moveDeltaY);
