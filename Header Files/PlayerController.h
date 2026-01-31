@@ -15,10 +15,17 @@ class PlayerController {
     const float gravity = -9.81f; // Standard Earth-gravity
     const float jumpForce = 5.0f;
     bool isGrounded = false;
-    float groundLevel = 0.0f; // Temporary until collision is added.
+    float groundLevel = 0.0f;
+    float walkingSpeed = 5.0f;
+    float sprintSpeed = 10.0f;
+    float flyingSpeed = 20.0f;
+    float flyingSprintSpeed = 100.0f;
 
     // Player Preference Variables
     float sensitivity = 0.1f;
+    float FOVdeg = 45.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 100.0f;
 
     // God Mode
     bool isGodModeActive = false;
@@ -34,6 +41,8 @@ private:
     glm::vec3 playerHalfExtent = glm::vec3(0.25f, 0.95f, 0.25f);
     void handleGroundMovement(float deltaTime);
     void handleFlyingMovement(float deltaTime);
+    void handlePlayerActions() const;
+    void checkGodModeState();
     void applyPhysics(float deltaTime);
 };
 
