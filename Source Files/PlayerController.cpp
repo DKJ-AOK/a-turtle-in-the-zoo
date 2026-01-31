@@ -2,44 +2,61 @@
 
 #include "../Header Files/Physics.h"
 
-void PlayerController::update(float deltaTime) {
+void PlayerController::update(const float deltaTime) {
     // 1. Rotation (Mouse)
     camera.HandleRotation(inputManager.getMouseDeltaX() * sensitivity, inputManager.getMouseDeltaY() * sensitivity);
 
-    // 2. Horizontal Movement (WASD)
+    // 2. Check God Mode State
+    checkGodModeState();
+
+    // 3. Horizontal Movement (WASD)
     if (isGodModeActive)
         handleFlyingMovement(deltaTime);
     else
         handleGroundMovement(deltaTime);
 
-    // 3. Vertical Movement (Gravity & Jump)
+    // 4. Vertical Movement (Gravity & Jump)
     if (!isGodModeActive)
         applyPhysics(deltaTime);
 
-    // 4. Matrix Update
-    camera.UpdateMatrix(45.0f, 0.1f, 200.0f);
+    // 5. Matrix Update
+    camera.UpdateMatrix(FOVdeg, nearPlane, farPlane);
+
+    // 6. Player Actions
+    handlePlayerActions();
 }
 
-void PlayerController::applyPhysics(float deltaTime) {
-    // 1. JUMP LOGIC (Vi tjekker på værdien fra SIDSTE frame)
+void PlayerController::checkGodModeState() {
+    if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
+        if (isGodModeActive) {
+            std::cout << "God Mode Deactivated" << std::endl;
+            isGodModeActive = false;
+        } else {
+            std::cout << "God Mode Activated" << std::endl;
+            isGodModeActive = true;
+        }
+    }
+}
+
+void PlayerController::applyPhysics(const float deltaTime) {
+    // 1. JUMP LOGIC
     if (inputManager.isActionJustPressed(Action::JUMP) && isGrounded) {
         verticalVelocity = jumpForce;
         isGrounded = false;
     }
 
-    // 2. TYNGDEKRAFT
+    // 2. GRAVITY
     if (!isGrounded) {
         verticalVelocity += gravity * deltaTime;
     }
 
-    // 3. BEVÆGELSE
+    // 3. MOVEMENT
     camera.Position.y += verticalVelocity * deltaTime;
 
-    // 4. ÆGTE KOLLISION (Brug den rigtige størrelse her!)
-    AABB actualBox = AABB::fromCenter(camera.Position, playerHalfExtent);
-    AABB cubeBox;
+    // 4. REAL COLLISION
+    const AABB actualBox = AABB::fromCenter(camera.Position, playerHalfExtent);
 
-    if (world.checkCollision(actualBox, cubeBox)) {
+    if (AABB cubeBox; world.checkCollision(actualBox, cubeBox)) {
         if (verticalVelocity < 0) { // Falder ned i gulv
             camera.Position.y = cubeBox.max.y + playerHalfExtent.y + 0.001f;
             verticalVelocity = 0.0f;
@@ -73,34 +90,52 @@ void PlayerController::applyPhysics(float deltaTime) {
 }
 
 void PlayerController::handleGroundMovement(float deltaTime) {
-    if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
-        std::cout << "God Mode Activated" << std::endl;
-        isGodModeActive = true;
+    // 1. Find wanted direction
+    glm::vec3 moveDir(0.0f);
+    glm::vec3 forward = glm::normalize(glm::vec3(camera.Forward.x, 0.0f, camera.Forward.z));
+    glm::vec3 right = camera.Right;
 
-        camera.SprintSpeed = 100.0f;
+    if (inputManager.isActionActive(Action::MOVE_FORWARD))  moveDir += forward;
+    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) moveDir -= forward;
+    if (inputManager.isActionActive(Action::MOVE_LEFT))     moveDir -= right;
+    if (inputManager.isActionActive(Action::MOVE_RIGHT))    moveDir += right;
+
+    if (glm::length(moveDir) > 0.0f) {
+        float currentSpeed = inputManager.isActionActive(Action::SPRINT) ? sprintSpeed : walkingSpeed;
+        glm::vec3 velocity = glm::normalize(moveDir) * currentSpeed * deltaTime;
+
+        // 2. X-movement with collision
+        camera.Position.x += velocity.x;
+        AABB boxX = AABB::fromCenter(camera.Position, playerHalfExtent);
+        AABB hitBox;
+        if (world.checkCollision(boxX, hitBox)) {
+            if (velocity.x > 0) camera.Position.x = hitBox.min.x - playerHalfExtent.x - 0.001f;
+            else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.001f;
+        }
+
+        // 3. Z-movement with collision
+        camera.Position.z += velocity.z;
+        AABB boxZ = AABB::fromCenter(camera.Position, playerHalfExtent);
+        if (world.checkCollision(boxZ, hitBox)) {
+            if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.001f;
+            else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.001f;
+        }
     }
+}
 
-    if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
-        camera.HandleGroundMovement(MOVE_FORWARD, deltaTime, world, playerHalfExtent);
-    }
+void PlayerController::handleFlyingMovement(const float deltaTime) {
+    const float currentSpeed = inputManager.isActionActive(Action::SPRINT) ? flyingSprintSpeed : flyingSpeed;
+    const float velocity = currentSpeed * deltaTime;
+    const glm::vec3 forward = camera.Forward * velocity;
+    const glm::vec3 right = camera.Right * velocity;
 
-    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) {
-        camera.HandleGroundMovement(MOVE_BACKWARD, deltaTime, world, playerHalfExtent);
-    }
+    if (inputManager.isActionActive(Action::MOVE_FORWARD))  camera.Position += forward;
+    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) camera.Position -= forward;
+    if (inputManager.isActionActive(Action::MOVE_LEFT))     camera.Position -= right;
+    if (inputManager.isActionActive(Action::MOVE_RIGHT))    camera.Position += right;
+}
 
-    if (inputManager.isActionActive(Action::MOVE_LEFT)) {
-        camera.HandleGroundMovement(MOVE_LEFT, deltaTime, world, playerHalfExtent);
-    }
-
-    if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
-        camera.HandleGroundMovement(MOVE_RIGHT, deltaTime, world, playerHalfExtent);
-    }
-
-    if (inputManager.isActionActive(Action::SPRINT))
-        camera.HandleGroundMovement(SPRINT, deltaTime, world, playerHalfExtent);
-    else
-        camera.HandleGroundMovement(WALK, deltaTime, world, playerHalfExtent);
-
+void PlayerController::handlePlayerActions() const {
     if (inputManager.isActionJustPressed(Action::HIT))
         std::cout << "Hit" << std::endl;
 
@@ -109,34 +144,4 @@ void PlayerController::handleGroundMovement(float deltaTime) {
 
     if (inputManager.isActionJustPressed(Action::INTERACT))
         std::cout << "Interact" << std::endl;
-}
-
-void PlayerController::handleFlyingMovement(float deltaTime) {
-    if (inputManager.isActionJustPressed(Action::GOD_MODE)) {
-        std::cout << "God Mode Deactivated" << std::endl;
-        isGodModeActive = false;
-
-        camera.SprintSpeed = 10.0f;
-    }
-
-    if (inputManager.isActionActive(Action::MOVE_FORWARD)) {
-        camera.HandleFlyingMovement(MOVE_FORWARD, deltaTime);
-    }
-
-    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) {
-        camera.HandleFlyingMovement(MOVE_BACKWARD, deltaTime);
-    }
-
-    if (inputManager.isActionActive(Action::MOVE_LEFT)) {
-        camera.HandleFlyingMovement(MOVE_LEFT, deltaTime);
-    }
-
-    if (inputManager.isActionActive(Action::MOVE_RIGHT)) {
-        camera.HandleFlyingMovement(MOVE_RIGHT, deltaTime);
-    }
-
-    if (inputManager.isActionActive(Action::SPRINT))
-        camera.HandleFlyingMovement(SPRINT, deltaTime);
-    else
-        camera.HandleFlyingMovement(WALK, deltaTime);
 }
