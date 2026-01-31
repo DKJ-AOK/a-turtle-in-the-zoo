@@ -1,5 +1,7 @@
 #include "../Header Files/PlayerController.h"
 
+#include <iostream>
+
 #include "../Header Files/Physics.h"
 
 void PlayerController::update(const float deltaTime) {

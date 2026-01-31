@@ -1,21 +1,29 @@
-//------- Ignore this ----------
-#include<filesystem>
+// 1. System/Library Includes (ALWAYS FIRST)
+#include <glad/gl.h>      // Glad needs to always be nr. 1
+#include <GLFW/glfw3.h>   // GLFW nr. 2
+#include <filesystem>
+#include <iostream>
+#include <random>
+#include <vector>
+
+// 2. GLM (Mathematics)
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+// 3. Thirdparty tools
+#include <stb_image.h>
+
+// 4. Our Headers
+#include "../Header Files/StateMachine/GameContext.h"
+#include "../Header Files/StateMachine/StateManager.h"
+#include "../Header Files/StateMachine/PlayingState.h"
 #include "../Header Files/PlayerController.h"
+#include "../Header Files/Mesh.h"
+#include "../Header Files/World.h"
+#include "../Header Files/InputManager.h"
+
 namespace fs = std::filesystem;
-//------------------------------
-
-#include<iostream>
-#include<random>
-#include<glad/gl.h>
-#include<GLFW/glfw3.h>
-
-#include<glm/glm.hpp>
-#include<glm/gtc/matrix_transform.hpp>
-#include<glm/gtc/type_ptr.hpp>
-#include<stb_image.h>
-#include"../Header Files/Mesh.h"
-#include"../Header Files/World.h"
-#include"../Header Files/InputManager.h"
 
 
 const unsigned int screenWidth = 1200;
@@ -94,9 +102,6 @@ int main() {
 	};
 	std::vector blockTex(blockTextures, blockTextures + sizeof(blockTextures) / sizeof(Texture));
 
-	auto seed = generateSeed();
-	World world(seed, blockTex);
-
 	// Shader for light cube
 	Shader lightShader("../Resource Files/Shaders/light.vert", "../Resource Files/Shaders/light.frag");
 	// Store mesh data in vectors for the mesh
@@ -126,8 +131,20 @@ int main() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	InputManager inputManager(screenWidth, screenHeight);
+	auto seed = generateSeed();
+	World world(seed, blockTex);
 	PlayerController playerController(inputManager, world, screenWidth, screenHeight);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	GameContext gameContext = {
+		window,
+		&inputManager,
+		&world,
+		&playerController,
+	};
+
+	StateManager stateManager(gameContext);
+
+	stateManager.ChangeState(std::make_unique<PlayingState>(gameContext));
 
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
@@ -140,21 +157,12 @@ int main() {
 		lastFrame = currentFrame;
 
 		// Updates State of Keybindings
-		inputManager.update(window);
-		playerController.update(deltaTime);
-
-		if (inputManager.isActionJustPressed(Action::EXIT_GAME)) {
-			std::cout << "Exit Game" << std::endl;
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-		}
+		stateManager.Update(deltaTime);
 
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Updates and exports the camera matrix to the Vertex Shader
-		world.updateChunks(playerController.camera.Position);
 
 		// Draws different meshes
 		shaderProgram.Activate();

@@ -2,13 +2,11 @@
 #define A_TURTLE_IN_THE_ZOO_CAMERA_H
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <glad/gl.h>
-#include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include<glm/gtx/vector_angle.hpp>
-#include "shaderClass.h"
+class Shader;
 
 class Camera {
 public:

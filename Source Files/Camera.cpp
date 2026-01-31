@@ -1,4 +1,8 @@
 ﻿#include "../Header Files/Camera.h"
+#include "../Header Files/shaderClass.h"
+
+#include <GL/gl.h>
+#include <glad/gl.h>
 
 Camera::Camera(int width, int height, glm::vec3 position)
     : Position(position), width(width), height(height) {
