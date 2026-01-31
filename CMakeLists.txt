@@ -36,6 +36,12 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Header Files/PlayerController.h"
         "Source Files/PlayerController.cpp"
         "Header Files/Physics.h"
+        "Header Files/StateMachine/GameState.h"
+        "Header Files/StateMachine/StateManager.h"
+        "Source Files/StateMachine/StateManager.cpp"
+        "Header Files/StateMachine/PlayingState.h"
+        "Source Files/StateMachine/PlayingState.cpp"
+        "Header Files/StateMachine/GameContext.h"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
