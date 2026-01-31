@@ -1,14 +1,10 @@
-//
-// Created by Oetho on 29-01-2026.
-//
-
 #include "../Header Files/PlayerController.h"
 
 #include "../Header Files/Physics.h"
 
 void PlayerController::update(float deltaTime) {
     // 1. Rotation (Mouse)
-    camera.HandleRotation(inputManager.getMouseDeltaX(), inputManager.getMouseDeltaY());
+    camera.HandleRotation(inputManager.getMouseDeltaX() * sensitivity, inputManager.getMouseDeltaY() * sensitivity);
 
     // 2. Horizontal Movement (WASD)
     if (isGodModeActive)

@@ -57,8 +57,8 @@ public:
     void unbindAllKeyBindings(Action action);
     void bindKey(Action action, InputType inputType, int keyCode);
     void update(GLFWwindow* window);
-    [[nodiscard]] float getMouseDeltaX(float sensitivity = 0.1f) const;
-    [[nodiscard]] float getMouseDeltaY(float sensitivity = 0.1f) const;
+    [[nodiscard]] float getMouseDeltaX() const;
+    [[nodiscard]] float getMouseDeltaY() const;
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_INPUTMANAGER_H

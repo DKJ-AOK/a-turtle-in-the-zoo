@@ -17,6 +17,9 @@ class PlayerController {
     bool isGrounded = false;
     float groundLevel = 0.0f; // Temporary until collision is added.
 
+    // Player Preference Variables
+    float sensitivity = 0.1f;
+
     // God Mode
     bool isGodModeActive = false;
 
