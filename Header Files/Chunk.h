@@ -17,7 +17,6 @@ enum BlockType : int {
     SAND = 4,
     SNOWY_GRASS = 5,
     WATER = 6,
-    TOP_WATER = 7,
     GRASS_QUAD = 8,
     RED_FLOWER_QUAD = 9,
 };
@@ -62,7 +61,7 @@ public:
     static constexpr int SIZE_X_Z = 16;
     static constexpr int SIZE_Y = 256;
     static constexpr float BLOCK_SCALE = 1.0f;
-    static constexpr BlockType NO_COLLISION_BLOCKS[] = {AIR, GRASS_QUAD, RED_FLOWER_QUAD, WATER, TOP_WATER};
+    static constexpr BlockType NO_COLLISION_BLOCKS[] = {AIR, GRASS_QUAD, RED_FLOWER_QUAD, WATER};
     BlockType blocks[SIZE_X_Z][SIZE_Y][SIZE_X_Z]{};
     glm::ivec3 position;
 
@@ -77,7 +76,7 @@ private:
 
     void addCrossQuadFaces(ShapeData& shapes, glm::vec3 pos) const;
     void addBlockFaces(World& world, ShapeData& shapes, glm::vec3 pos, BlockType blockType) const;
-    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType);
+    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType, bool lowerHeight = false);
 
     static UVRect getUVsForCoordinates(int column, int row);
     static UVRect getUVs(BlockType type, int faceDir);

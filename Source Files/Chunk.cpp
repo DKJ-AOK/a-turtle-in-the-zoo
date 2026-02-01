@@ -190,31 +190,29 @@ void Chunk::addBlockFaces(World& world, ShapeData& shapes, const glm::vec3 pos, 
         return false;
     };
 
+    const bool isSurfaceWater = (blockType == WATER && checkNeighbor(pos.x, pos.y + 1, pos.z, {0, 1, 0}));
+
     // Top
     if (checkNeighbor(pos.x, pos.y + 1, pos.z, {0, 1, 0}))
-        addBlockFace(shapes.vertices, shapes.indices,
-            worldPos, 0, blockType);
+        addBlockFace(shapes.vertices, shapes.indices, worldPos, 0, blockType, isSurfaceWater);
     // Bottom
     if (checkNeighbor(pos.x, pos.y - 1, pos.z, {0, -1, 0}))
-        addBlockFace(shapes.vertices, shapes.indices,
-            worldPos, 1, blockType);
+        addBlockFace(shapes.vertices, shapes.indices, worldPos, 1, blockType, isSurfaceWater);
     // Front
     if (checkNeighbor(pos.x, pos.y, pos.z + 1, {0, 0, 1}))
-        addBlockFace(shapes.vertices, shapes.indices,
-            worldPos, 2, blockType);
+        addBlockFace(shapes.vertices, shapes.indices, worldPos, 2, blockType, isSurfaceWater);
     // Back
     if (checkNeighbor(pos.x, pos.y, pos.z - 1, {0, 0, -1}))
-        addBlockFace(shapes.vertices, shapes.indices,
-            worldPos, 3, blockType);
+        addBlockFace(shapes.vertices, shapes.indices, worldPos, 3, blockType, isSurfaceWater);
     // Left
     if (checkNeighbor(pos.x - 1, pos.y, pos.z, {-1, 0, 0}))
-        addBlockFace(shapes.vertices, shapes.indices, worldPos, 4, blockType);
+        addBlockFace(shapes.vertices, shapes.indices, worldPos, 4, blockType, isSurfaceWater);
     // Right
     if (checkNeighbor(pos.x + 1, pos.y, pos.z, {1, 0, 0}))
-        addBlockFace(shapes.vertices, shapes.indices, worldPos, 5, blockType);
+        addBlockFace(shapes.vertices, shapes.indices, worldPos, 5, blockType, isSurfaceWater);
 }
 
-void Chunk::addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, const glm::vec3 pos, const int faceDir, const BlockType blockType) {
+void Chunk::addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType, bool lowerHeight) {
     const glm::vec3 blockPos = pos * BLOCK_SCALE;
     constexpr float size = BLOCK_SCALE / 2.0f;
 
@@ -222,11 +220,16 @@ void Chunk::addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& ind
 
     const GLuint startIndex = vertices.size();
 
+    float topY = size;
+    if (lowerHeight) {
+        topY = size - 0.1f; // Adjust 0.1f to your preferred depth (e.g., 0.2f for lower water)
+    }
+
     if (faceDir == 0) { // Top
-        vertices.push_back({blockPos + glm::vec3(-size,  size,  size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  size,  size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  size, -size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size,  size, -size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+        vertices.push_back({blockPos + glm::vec3(-size,  topY,  size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({blockPos + glm::vec3( size,  topY,  size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({blockPos + glm::vec3( size,  topY, -size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({blockPos + glm::vec3(-size,  topY, -size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
     } else if (faceDir == 1) { // Bottom
         vertices.push_back({blockPos + glm::vec3(-size, -size, -size), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
         vertices.push_back({blockPos + glm::vec3( size, -size, -size), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
@@ -235,23 +238,23 @@ void Chunk::addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& ind
     } else if (faceDir == 2) { // Front
         vertices.push_back({blockPos + glm::vec3(-size, -size,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vStart)});
         vertices.push_back({blockPos + glm::vec3( size, -size,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  size,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size,  size,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vEnd)});
+        vertices.push_back({blockPos + glm::vec3( size,  topY,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({blockPos + glm::vec3(-size,  topY,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vEnd)});
     } else if (faceDir == 3) { // Back
         vertices.push_back({blockPos + glm::vec3( size, -size, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vStart)});
         vertices.push_back({blockPos + glm::vec3(-size, -size, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3(-size,  size, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3( size,  size, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vEnd)});
+        vertices.push_back({blockPos + glm::vec3(-size,  topY, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({blockPos + glm::vec3( size,  topY, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vEnd)});
     } else if (faceDir == 4) { // Left
         vertices.push_back({blockPos + glm::vec3(-size, -size, -size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
         vertices.push_back({blockPos + glm::vec3(-size, -size,  size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3(-size,  size,  size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size,  size, -size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+        vertices.push_back({blockPos + glm::vec3(-size,  topY,  size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({blockPos + glm::vec3(-size,  topY, -size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
     } else if (faceDir == 5) { // Right
         vertices.push_back({blockPos + glm::vec3( size, -size,  size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
         vertices.push_back({blockPos + glm::vec3( size, -size, -size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  size, -size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3( size,  size,  size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+        vertices.push_back({blockPos + glm::vec3( size,  topY, -size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({blockPos + glm::vec3( size,  topY,  size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
     }
 
     indices.push_back(startIndex + 0);
