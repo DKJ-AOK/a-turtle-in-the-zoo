@@ -26,6 +26,9 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
             } else if (weights.mountain > weights.plains && weights.mountain > weights.desert && weights.mountain > weights.snowyTaiga) {
                 surfaceBlock = STONE;
                 subSurfaceBlock = STONE;
+            } if (surfaceBlock != STONE && height >= seaLevel - 2 && height <= seaLevel + 1) {
+                surfaceBlock = SAND;
+                subSurfaceBlock = SAND;
             }
 
             for (int y = 0; y < SIZE_Y; y++) {
@@ -36,7 +39,12 @@ Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
                 } else if (y < height) {
                     blocks[x][y][z] = subSurfaceBlock;
                 } else if (y == height) {
-                    blocks[x][y][z] = surfaceBlock;
+                    if (height < seaLevel) {
+                        if (surfaceBlock == SAND) blocks[x][y][z] = SAND;
+                        else blocks[x][y][z] = DIRT;
+                    } else {
+                        blocks[x][y][z] = surfaceBlock;
+                    }
                 } else if (y == height + 1 && height >= seaLevel && (surfaceBlock == GRASS || surfaceBlock == SNOWY_GRASS)) {
                     // Use a simple deterministic hash to decide where to spawn decorations
                     const uint32_t decorationHash = (static_cast<uint32_t>(worldX) * 73856093) ^
@@ -63,13 +71,13 @@ int Chunk::getNoiseHeightAtWorldPosition(const glm::ivec2 pos, const uint32_t se
     double hPlains = 0, hMountain = 0, hDesert = 0, hSnowyTaiga = 0;
 
     if (weights.plains > 0)
-        hPlains = plains.baseHeight + perlin.octave2D_01(pos.x * plains.frequency, pos.y * plains.frequency, plains.octaves) * plains.baseHeight;
+        hPlains = plains.baseHeight + perlin.octave2D_01(pos.x * plains.frequency, pos.y * plains.frequency, plains.octaves) * plains.variation;
     if (weights.mountain > 0)
-        hMountain = mountain.baseHeight + perlin.octave2D_01(pos.x * mountain.frequency, pos.y * mountain.frequency, mountain.octaves) * mountain.baseHeight;
+        hMountain = mountain.baseHeight + perlin.octave2D_01(pos.x * mountain.frequency, pos.y * mountain.frequency, mountain.octaves) * mountain.variation;
     if (weights.desert > 0)
-        hDesert = desert.baseHeight + perlin.octave2D_01(pos.x * desert.frequency, pos.y * desert.frequency, desert.octaves) * desert.baseHeight;
+        hDesert = desert.baseHeight + perlin.octave2D_01(pos.x * desert.frequency, pos.y * desert.frequency, desert.octaves) * desert.variation;
     if (weights.snowyTaiga > 0)
-        hSnowyTaiga = snowyTaiga.baseHeight + perlin.octave2D_01(pos.x * snowyTaiga.frequency, pos.y * snowyTaiga.frequency, snowyTaiga.octaves) * snowyTaiga.baseHeight;
+        hSnowyTaiga = snowyTaiga.baseHeight + perlin.octave2D_01(pos.x * snowyTaiga.frequency, pos.y * snowyTaiga.frequency, snowyTaiga.octaves) * snowyTaiga.variation;
 
     float finalHeight = (hPlains * weights.plains) + (hMountain * weights.mountain) + (hDesert * weights.desert) + (hSnowyTaiga * weights.snowyTaiga);
 
