@@ -156,8 +156,6 @@ void World::draw(Shader& shader, Camera& camera) const {
             pair.second.crossQuadMesh->Draw(shader, camera);
         }
     }
-    glEnable(GL_CULL_FACE);
-
     // Transparent blocks
     glDepthMask(GL_FALSE); // Disable writing to depth buffer for water
     for (auto& pair : chunks) {
@@ -165,6 +163,7 @@ void World::draw(Shader& shader, Camera& camera) const {
             pair.second.transparentMesh->Draw(shader, camera);
         }
     }
+    glEnable(GL_CULL_FACE);
     glDepthMask(GL_TRUE); // Re-enable for the next frame
 }
 

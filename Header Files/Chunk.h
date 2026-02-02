@@ -17,9 +17,8 @@ enum BlockType : int {
     SAND = 4,
     SNOWY_GRASS = 5,
     WATER = 6,
-    TOP_WATER = 7,
-    GRASS_QUAD = 8,
-    RED_FLOWER_QUAD = 9,
+    GRASS_QUAD = 7,
+    RED_FLOWER_QUAD = 8,
 };
 
 enum Biome {
@@ -48,6 +47,7 @@ struct BiomeSettings {
     float frequency;
     int octaves;
     int baseHeight;
+    int variation;
 };
 
 struct BiomeWeights {
@@ -62,7 +62,7 @@ public:
     static constexpr int SIZE_X_Z = 16;
     static constexpr int SIZE_Y = 256;
     static constexpr float BLOCK_SCALE = 1.0f;
-    static constexpr BlockType NO_COLLISION_BLOCKS[] = {AIR, GRASS_QUAD, RED_FLOWER_QUAD, WATER, TOP_WATER};
+    static constexpr BlockType NO_COLLISION_BLOCKS[] = {AIR, GRASS_QUAD, RED_FLOWER_QUAD, WATER};
     BlockType blocks[SIZE_X_Z][SIZE_Y][SIZE_X_Z]{};
     glm::ivec3 position;
 
@@ -73,11 +73,11 @@ public:
     [[nodiscard]] BlockType getBlockTypeAtWorldPosition(glm::ivec3 pos) const;
 
 private:
-    int seaLevel = 20;
+    int seaLevel = 32;
 
     void addCrossQuadFaces(ShapeData& shapes, glm::vec3 pos) const;
     void addBlockFaces(World& world, ShapeData& shapes, glm::vec3 pos, BlockType blockType) const;
-    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType);
+    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType, bool lowerHeight = false);
 
     static UVRect getUVsForCoordinates(int column, int row);
     static UVRect getUVs(BlockType type, int faceDir);
@@ -85,10 +85,10 @@ private:
     [[nodiscard]] int getNoiseHeightAtWorldPosition(glm::ivec2 pos, uint32_t seed, const BiomeWeights& weights) const;
     [[nodiscard]] static BiomeWeights getBiomeWeightsAtWorldPosition(glm::ivec2 pos, std::uint32_t seed);
 
-    BiomeSettings plains   = { 0.025f, 4, 20 };
-    BiomeSettings mountain = { 0.050f, 6, 60 };
-    BiomeSettings desert   = { 0.020f, 3, 15 };
-    BiomeSettings snowyTaiga = { 0.025f, 4, 25 };
+    BiomeSettings plains   = { 0.025f, 4, 28, 15 };
+    BiomeSettings mountain = { 0.050f, 6, 50, 40,  };
+    BiomeSettings desert   = { 0.020f, 3, 25, 20 };
+    BiomeSettings snowyTaiga = { 0.025f, 4, 26, 20 };
 };
 
 struct ChunkData {
