@@ -15,4 +15,11 @@ struct AABB {
     }
 };
 
+struct RaycastResult {
+    bool hit = false;
+    glm::ivec3 blockPos;
+    glm::ivec3 normal;
+    float distance;
+};
+
 #endif //A_TURTLE_IN_THE_ZOO_PHYSICS_H

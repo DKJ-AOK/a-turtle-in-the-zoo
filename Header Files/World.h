@@ -4,14 +4,14 @@
 
 #ifndef A_TURTLE_IN_THE_ZOO_WORLD_H
 #define A_TURTLE_IN_THE_ZOO_WORLD_H
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <map>
 #include <queue>
 #include <vector>
-#include <glm/vec3.hpp>
 #include <thread>
 #include <condition_variable>
 #include <atomic>
-#include <glm/vec2.hpp>
 #include <memory>
 #include <shared_mutex>
 
@@ -51,6 +51,9 @@ public:
     bool checkCollision(const AABB& playerBox, AABB& cubeOutBox) const;
     static bool intersect(const AABB& a, const AABB& b);
     static AABB getBlockAABB(int x, int y, int z);
+
+    // Raycast
+    RaycastResult raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const;
 
 private:
     std::map<std::pair<int, int>, ChunkData> chunks;

@@ -1,8 +1,8 @@
 ﻿#ifndef CHUNK_H
 #define CHUNK_H
 
-#include <vector>
 #include <glm/glm.hpp>
+#include <vector>
 #include <PerlinNoise.hpp>
 #include <memory>
 #include "Mesh.h"
@@ -34,7 +34,7 @@ struct UVRect {
 
 struct ShapeData {
     std::vector<Vertex> vertices;
-    std::vector<GLuint> indices;
+    std::vector<unsigned int> indices;
 };
 
 struct MeshData {
@@ -77,7 +77,7 @@ private:
 
     void addCrossQuadFaces(ShapeData& shapes, glm::vec3 pos) const;
     void addBlockFaces(World& world, ShapeData& shapes, glm::vec3 pos, BlockType blockType) const;
-    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType, bool lowerHeight = false);
+    static void addBlockFace(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices, glm::vec3 pos, int faceDir, BlockType blockType, bool lowerHeight = false);
 
     static UVRect getUVsForCoordinates(int column, int row);
     static UVRect getUVs(BlockType type, int faceDir);

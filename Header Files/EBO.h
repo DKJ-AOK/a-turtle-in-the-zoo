@@ -2,12 +2,11 @@
 #define A_TURTLE_IN_THE_ZOO_EBO_H
 
 #include <vector>
-#include <glad/gl.h>
 
 class EBO {
     public:
-        GLuint ID{};
-    EBO(const std::vector<GLuint> &indices);
+        unsigned int ID{};
+    EBO(const std::vector<unsigned int> &indices);
 
     void Bind() const;
     void Unbind() const;

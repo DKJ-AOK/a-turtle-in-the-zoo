@@ -1,8 +1,8 @@
-﻿#include "../Header Files/Camera.h"
+﻿#include <glad/gl.h>
+#include "../Header Files/Camera.h"
 #include "../Header Files/shaderClass.h"
 
-#include <GL/gl.h>
-#include <glad/gl.h>
+
 
 Camera::Camera(int width, int height, glm::vec3 position)
     : Position(position), width(width), height(height) {
@@ -30,7 +30,7 @@ void Camera::UpdateMatrix(const float FOVdeg, const float nearPlane, const float
     glm::mat4 projection = glm::mat4(1.0f);
 
     // Makes camera look in the right direction from the right position
-    constexpr float eyeOffset = 0.8f;
+    constexpr float eyeOffset = 1.75f;
     const glm::vec3 eyePos = Position + glm::vec3(0.0f, eyeOffset, 0.0f);
 
     view = glm::lookAt(eyePos, eyePos + Forward, Up);

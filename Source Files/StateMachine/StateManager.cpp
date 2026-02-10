@@ -10,6 +10,10 @@ void StateManager::ChangeState(std::unique_ptr<GameState> newState) {
     currentState->onEnter();
 }
 
-void StateManager::Update(const float deltaTime) {
+void StateManager::Update(const float deltaTime) const {
     if (currentState) currentState->update(deltaTime);
+}
+
+void StateManager::DrawUI() const {
+    if (currentState) currentState->drawUI();
 }

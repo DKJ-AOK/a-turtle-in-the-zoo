@@ -1,4 +1,5 @@
-﻿#include "../Header Files/VAO.h"
+﻿#include <glad/gl.h>
+#include "../Header Files/VAO.h"
 
 VAO::VAO() {
     // Generate the VAO and VBO with only 1 object each

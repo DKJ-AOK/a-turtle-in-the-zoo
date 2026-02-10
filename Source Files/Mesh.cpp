@@ -1,4 +1,5 @@
-﻿#include "../Header Files/Mesh.h"
+﻿#include <glad/gl.h>
+#include "../Header Files/Mesh.h"
 
 Mesh::Mesh(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices, const std::vector<Texture> &textures) {
     Mesh::vertices = vertices;
