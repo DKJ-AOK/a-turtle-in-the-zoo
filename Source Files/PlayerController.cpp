@@ -142,15 +142,6 @@ void PlayerController::handlePlayerActions() const {
         auto rayOrigin = camera.Position + PlayerEyeVec3;
         auto raycastResult = world.raycast(rayOrigin, camera.Forward, maxReachDistance);
         if (raycastResult.hit) {
-            // FOR TESTING PURPOSES
-            std::cout << "Camera Postion - x: " + std::to_string(camera.Position.x) +
-                    " | y: " + std::to_string(camera.Position.y) +
-                    " | z: " + std::to_string(camera.Position.z) << std::endl;
-
-            std::cout << "Target Position - x: " + std::to_string(raycastResult.blockPos.x) +
-                    " | y: " + std::to_string(raycastResult.blockPos.y) +
-                    " | z: " + std::to_string(raycastResult.blockPos.z) << std::endl;
-
             auto removedBlock = world.removeBlockAtWorldPosition(raycastResult.blockPos);
             std::cout << "RemovedBlock of Type: " + std::to_string(removedBlock) << std::endl;
         } else
