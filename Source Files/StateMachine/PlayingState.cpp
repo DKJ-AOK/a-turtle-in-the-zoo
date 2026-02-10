@@ -112,10 +112,6 @@ void PlayingState::renderSelectionBox(const glm::ivec3 blockPos) {
         static_cast<float>(blockPos.z)
     );
 
-    std::cout << "x: " + std::to_string(blockPos.x)
-            << " " << "y: " + std::to_string(blockPos.y)
-            << " " << "z: " + std::to_string(blockPos.z) << std::endl;
-
     // 1. Move to the block corner returned by raycast
     model = glm::translate(model, snapPos);
 
