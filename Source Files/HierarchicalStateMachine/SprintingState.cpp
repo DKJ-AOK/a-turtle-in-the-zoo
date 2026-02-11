@@ -11,7 +11,7 @@
 #include "../../Header Files/HierarchicalStateMachine/SneakingState.h"
 #include "../../Header Files/PlayerController.h"
 
-std::unique_ptr<MovementState> handleInput(const PlayerController& player, InputManager& input) {
+std::unique_ptr<MovementState> SprintingState::handleInput(PlayerController &player, InputManager &input) {
     const glm::vec3 moveDir = player.calculateMoveDir();
 
     // If movement stopped -> Switch to IdleState
@@ -27,6 +27,6 @@ std::unique_ptr<MovementState> handleInput(const PlayerController& player, Input
     return nullptr; // Otherwise stay in this State
 }
 
-void update(PlayerController& player, const float deltaTime) {
+void SprintingState::update(PlayerController &player, float deltaTime) {
     player.handleHorizontalMovement(deltaTime, player.sprintSpeed);
 }
