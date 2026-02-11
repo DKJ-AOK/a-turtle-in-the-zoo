@@ -50,6 +50,7 @@ set(SOURCE_FILES "Source Files/main.cpp"
         "Header Files/HierarchicalStateMachine/WalkingState.h"
         "Source Files/HierarchicalStateMachine/IdleState.cpp"
         "Source Files/HierarchicalStateMachine/WalkingState.cpp"
+        "Source Files/HierarchicalStateMachine/SneakingState.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
