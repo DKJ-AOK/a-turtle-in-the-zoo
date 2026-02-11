@@ -31,7 +31,7 @@ std::unique_ptr<MovementState> IdleState::handleInput(PlayerController& player, 
     return nullptr; // Bliv i Idle
 }
 
-void IdleState::update(PlayerController& player, float deltaTime) {
+void IdleState::update(PlayerController& player, const float deltaTime) {
     // In Idle, we stand still. We still call movement with 0 speed
     // to ensure that the collision system still keeps us out of walls
     player.handleHorizontalMovement(deltaTime, 0.0f);
