@@ -2,6 +2,19 @@
 #include "../Header Files/PlayerController.h"
 #include "../Header Files/Chunk.h"
 #include "../Header Files/Physics.h"
+#include "../Header Files/HierarchicalStateMachine/MovementState.h"
+#include "../Header Files/HierarchicalStateMachine/IdleState.h"
+
+PlayerController::PlayerController(InputManager& inputManagerRef, World& worldRef, int screenWidth, int screenHeight)
+    : camera(screenWidth, screenHeight, glm::vec3(0.0f, 30.0f, 5.0f)),
+      inputManager(inputManagerRef),
+      world(worldRef)
+{
+    // Initialize Movement State
+    currentMoveState = std::make_unique<IdleState>();
+}
+
+PlayerController::~PlayerController() = default;
 
 void PlayerController::update(const float deltaTime) {
     // 1. Rotation (Mouse)
@@ -13,8 +26,16 @@ void PlayerController::update(const float deltaTime) {
     // 3. Horizontal Movement (WASD)
     if (isGodModeActive)
         handleFlyingMovement(deltaTime);
-    else
-        handleGroundMovement(deltaTime);
+    else {
+        // 1. Lad staten håndtere input og potentielt skifte state
+        auto nextState = currentMoveState->handleInput(*this, inputManager);
+        if (nextState) {
+            currentMoveState = std::move(nextState);
+        }
+
+        // 2. Kør statens update (som kalder handleHorizontalMovement)
+        currentMoveState->update(*this, deltaTime);
+    }
 
     // 4. Vertical Movement (Gravity & Jump)
     if (!isGodModeActive)
@@ -90,40 +111,6 @@ void PlayerController::applyPhysics(const float deltaTime) {
     }
 }
 
-void PlayerController::handleGroundMovement(float deltaTime) {
-    // 1. Find wanted direction
-    glm::vec3 moveDir(0.0f);
-    glm::vec3 forward = glm::normalize(glm::vec3(camera.Forward.x, 0.0f, camera.Forward.z));
-    glm::vec3 right = camera.Right;
-
-    if (inputManager.isActionActive(Action::MOVE_FORWARD))  moveDir += forward;
-    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) moveDir -= forward;
-    if (inputManager.isActionActive(Action::MOVE_LEFT))     moveDir -= right;
-    if (inputManager.isActionActive(Action::MOVE_RIGHT))    moveDir += right;
-
-    if (glm::length(moveDir) > 0.0f) {
-        float currentSpeed = inputManager.isActionActive(Action::SPRINT) ? sprintSpeed : walkingSpeed;
-        glm::vec3 velocity = glm::normalize(moveDir) * currentSpeed * deltaTime;
-
-        // 2. X-movement with collision
-        camera.Position.x += velocity.x;
-        AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
-        AABB hitBox;
-        if (world.checkCollision(boxX, hitBox)) {
-            if (velocity.x > 0) camera.Position.x = hitBox.min.x - playerHalfExtent.x - 0.01f;
-            else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.01f;
-        }
-
-        // 3. Z-movement with collision
-        camera.Position.z += velocity.z;
-        AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
-        if (world.checkCollision(boxZ, hitBox)) {
-            if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.01f;
-            else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.01f;
-        }
-    }
-}
-
 void PlayerController::handleFlyingMovement(const float deltaTime) {
     const float currentSpeed = inputManager.isActionActive(Action::SPRINT) ? flyingSprintSpeed : flyingSpeed;
     const float velocity = currentSpeed * deltaTime;
@@ -163,4 +150,46 @@ void PlayerController::handlePlayerActions() const {
 
     if (inputManager.isActionJustPressed(Action::INTERACT))
         std::cout << "Interact" << std::endl;
+}
+
+glm::vec3 PlayerController::calculateMoveDir() const {
+    glm::vec3 moveDir(0.0f);
+    // We project Forward down onto the XZ plane (y=0) to prevent the player from moving slower when looking up/down.
+    const glm::vec3 forward = glm::normalize(glm::vec3(camera.Forward.x, 0.0f, camera.Forward.z));
+    const glm::vec3 right = camera.Right;
+
+    if (inputManager.isActionActive(Action::MOVE_FORWARD))  moveDir += forward;
+    if (inputManager.isActionActive(Action::MOVE_BACKWARD)) moveDir -= forward;
+    if (inputManager.isActionActive(Action::MOVE_LEFT))     moveDir -= right;
+    if (inputManager.isActionActive(Action::MOVE_RIGHT))    moveDir += right;
+
+    if (glm::length(moveDir) > 0.0f) {
+        return glm::normalize(moveDir);
+    }
+    return glm::vec3(0.0f);
+}
+
+void PlayerController::handleHorizontalMovement(float deltaTime, float speed) {
+    glm::vec3 moveDir = calculateMoveDir();
+
+    if (glm::length(moveDir) > 0.0f) {
+        glm::vec3 velocity = moveDir * speed * deltaTime;
+
+        // 1. X-movement with collision
+        camera.Position.x += velocity.x;
+        AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
+        AABB hitBox;
+        if (world.checkCollision(boxX, hitBox)) {
+            if (velocity.x > 0) camera.Position.x = hitBox.min.x - playerHalfExtent.x - 0.01f;
+            else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.01f;
+        }
+
+        // 2. Z-movement with collision
+        camera.Position.z += velocity.z;
+        AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
+        if (world.checkCollision(boxZ, hitBox)) {
+            if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.01f;
+            else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.01f;
+        }
+    }
 }
