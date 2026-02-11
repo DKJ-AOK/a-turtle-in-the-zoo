@@ -15,9 +15,9 @@
 #include <stb_image.h>
 
 // 4. Our Headers
-#include "../Header Files/StateMachine/GameContext.h"
-#include "../Header Files/StateMachine/StateManager.h"
-#include "../Header Files/StateMachine/PlayingState.h"
+#include "../Header Files/FiniteStateMachine/GameContext.h"
+#include "../Header Files/FiniteStateMachine/StateManager.h"
+#include "../Header Files/FiniteStateMachine/PlayingState.h"
 #include "../Header Files/PlayerController.h"
 #include "../Header Files/Mesh.h"
 #include "../Header Files/World.h"
