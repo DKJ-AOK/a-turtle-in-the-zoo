@@ -156,9 +156,6 @@ int main() {
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		// Updates State of Keybindings
-		stateManager.Update(deltaTime);
-
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
@@ -169,6 +166,10 @@ int main() {
 
 		world.draw(shaderProgram, playerController.camera);
 		light.Draw(lightShader, playerController.camera);
+
+		// Updates State of Keybindings
+		stateManager.Update(deltaTime);
+		stateManager.DrawUI();
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);

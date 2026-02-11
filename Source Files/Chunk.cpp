@@ -1,4 +1,5 @@
-﻿#include "../Header Files/Chunk.h"
+﻿#include <glad/gl.h>
+#include "../Header Files/Chunk.h"
 #include "../Header Files/World.h"
 
 Chunk::Chunk(const glm::ivec3 pos, const std::uint32_t seed) : position(pos) {
@@ -138,8 +139,9 @@ void Chunk::addCrossQuadFaces(ShapeData &shapes, const glm::vec3 pos) const {
 
     const BlockType type = blocks[x][y][z];
     const glm::ivec3 worldPos = glm::ivec3(x, y, z) + position * SIZE_X_Z;
-    const glm::vec3 blockPos = glm::vec3(worldPos) * BLOCK_SCALE;
-    constexpr float size = BLOCK_SCALE / 2.0f;
+    const glm::vec3 b = glm::vec3(worldPos) * BLOCK_SCALE; // Bund-hjørne
+    const float s = BLOCK_SCALE;
+    const float h = s;
 
     // 2. Get UVs for the block type
     // Note: You must update Chunk::getUVs to handle GRASS_QUAD and RED_FLOWER_QUAD
@@ -150,10 +152,10 @@ void Chunk::addCrossQuadFaces(ShapeData &shapes, const glm::vec3 pos) const {
     // Normal is often set to (0, 1, 0) for consistent lighting on plants
     constexpr glm::vec3 normal(0, 1, 0);
 
-    shapes.vertices.push_back({blockPos + glm::vec3(-size, -size, -size), normal, glm::vec3(1), glm::vec2(uStart, vStart)});
-    shapes.vertices.push_back({blockPos + glm::vec3( size, -size,  size), normal, glm::vec3(1), glm::vec2(uEnd,   vStart)});
-    shapes.vertices.push_back({blockPos + glm::vec3( size,  size,  size), normal, glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-    shapes.vertices.push_back({blockPos + glm::vec3(-size,  size, -size), normal, glm::vec3(1), glm::vec2(uStart, vEnd)});
+    shapes.vertices.push_back({b + glm::vec3(0, 0, 0), normal, glm::vec3(1), glm::vec2(uStart, vStart)});
+    shapes.vertices.push_back({b + glm::vec3(s, 0, s), normal, glm::vec3(1), glm::vec2(uEnd,   vStart)});
+    shapes.vertices.push_back({b + glm::vec3(s, h, s), normal, glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+    shapes.vertices.push_back({b + glm::vec3(0, h, 0), normal, glm::vec3(1), glm::vec2(uStart, vEnd)});
 
     shapes.indices.push_back(startIdx + 0);
     shapes.indices.push_back(startIdx + 1);
@@ -164,10 +166,10 @@ void Chunk::addCrossQuadFaces(ShapeData &shapes, const glm::vec3 pos) const {
 
     // 4. Diagonal 2 (Front-Left to Back-Right)
     startIdx = shapes.vertices.size();
-    shapes.vertices.push_back({blockPos + glm::vec3(-size, -size,  size), normal, glm::vec3(1), glm::vec2(uStart, vStart)});
-    shapes.vertices.push_back({blockPos + glm::vec3( size, -size, -size), normal, glm::vec3(1), glm::vec2(uEnd,   vStart)});
-    shapes.vertices.push_back({blockPos + glm::vec3( size,  size, -size), normal, glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-    shapes.vertices.push_back({blockPos + glm::vec3(-size,  size,  size), normal, glm::vec3(1), glm::vec2(uStart, vEnd)});
+    shapes.vertices.push_back({b + glm::vec3(0, 0, s), normal, glm::vec3(1), glm::vec2(uStart, vStart)});
+    shapes.vertices.push_back({b + glm::vec3(s, 0, 0), normal, glm::vec3(1), glm::vec2(uEnd,   vStart)});
+    shapes.vertices.push_back({b + glm::vec3(s, h, 0), normal, glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+    shapes.vertices.push_back({b + glm::vec3(0, h, s), normal, glm::vec3(1), glm::vec2(uStart, vEnd)});
 
     shapes.indices.push_back(startIdx + 0);
     shapes.indices.push_back(startIdx + 1);
@@ -221,48 +223,46 @@ void Chunk::addBlockFaces(World& world, ShapeData& shapes, const glm::vec3 pos, 
 }
 
 void Chunk::addBlockFace(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, glm::vec3 pos, int faceDir, BlockType blockType, bool lowerHeight) {
-    const glm::vec3 blockPos = pos * BLOCK_SCALE;
-    constexpr float size = BLOCK_SCALE / 2.0f;
+    const glm::vec3 b = pos * BLOCK_SCALE; // Bund-venstre-bag hjørne
+    const float s = BLOCK_SCALE;           // Fuld størrelse (1.0)
 
     auto [uStart, uEnd, vStart, vEnd] = getUVs(blockType, faceDir);
-
     const GLuint startIndex = vertices.size();
 
-    float topY = size;
-    if (lowerHeight) {
-        topY = size - 0.1f; // Adjust 0.1f to your preferred depth (e.g., 0.2f for lower water)
-    }
+    float h = s; // Højde
+    if (lowerHeight) h = s - 0.1f;
 
-    if (faceDir == 0) { // Top
-        vertices.push_back({blockPos + glm::vec3(-size,  topY,  size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  topY,  size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  topY, -size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size,  topY, -size), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
-    } else if (faceDir == 1) { // Bottom
-        vertices.push_back({blockPos + glm::vec3(-size, -size, -size), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3( size, -size, -size), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size, -size,  size), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size, -size,  size), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
-    } else if (faceDir == 2) { // Front
-        vertices.push_back({blockPos + glm::vec3(-size, -size,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3( size, -size,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  topY,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size,  topY,  size), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vEnd)});
-    } else if (faceDir == 3) { // Back
-        vertices.push_back({blockPos + glm::vec3( size, -size, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3(-size, -size, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3(-size,  topY, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3( size,  topY, -size), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vEnd)});
-    } else if (faceDir == 4) { // Left
-        vertices.push_back({blockPos + glm::vec3(-size, -size, -size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3(-size, -size,  size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3(-size,  topY,  size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3(-size,  topY, -size), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
-    } else if (faceDir == 5) { // Right
-        vertices.push_back({blockPos + glm::vec3( size, -size,  size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
-        vertices.push_back({blockPos + glm::vec3( size, -size, -size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
-        vertices.push_back({blockPos + glm::vec3( size,  topY, -size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
-        vertices.push_back({blockPos + glm::vec3( size,  topY,  size), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+    // Vi bygger fladerne fra hjørnet 'b' i stedet for fra et center
+    if (faceDir == 0) { // Top (Y+)
+        vertices.push_back({b + glm::vec3(0, h, s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({b + glm::vec3(s, h, s), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({b + glm::vec3(s, h, 0), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({b + glm::vec3(0, h, 0), glm::vec3(0, 1, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+    } else if (faceDir == 1) { // Bottom (Y-)
+        vertices.push_back({b + glm::vec3(0, 0, 0), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({b + glm::vec3(s, 0, 0), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({b + glm::vec3(s, 0, s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({b + glm::vec3(0, 0, s), glm::vec3(0, -1, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+    } else if (faceDir == 2) { // Front (Z+)
+        vertices.push_back({b + glm::vec3(0, 0, s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({b + glm::vec3(s, 0, s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({b + glm::vec3(s, h, s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({b + glm::vec3(0, h, s), glm::vec3(0, 0, 1), glm::vec3(1), glm::vec2(uStart, vEnd)});
+    } else if (faceDir == 3) { // Back (Z-)
+        vertices.push_back({b + glm::vec3(s, 0, 0), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({b + glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({b + glm::vec3(0, h, 0), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({b + glm::vec3(s, h, 0), glm::vec3(0, 0, -1), glm::vec3(1), glm::vec2(uStart, vEnd)});
+    } else if (faceDir == 4) { // Left (X-)
+        vertices.push_back({b + glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({b + glm::vec3(0, 0, s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({b + glm::vec3(0, h, s), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({b + glm::vec3(0, h, 0), glm::vec3(-1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
+    } else if (faceDir == 5) { // Right (X+)
+        vertices.push_back({b + glm::vec3(s, 0, s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vStart)});
+        vertices.push_back({b + glm::vec3(s, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vStart)});
+        vertices.push_back({b + glm::vec3(s, h, 0), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uEnd,   vEnd)});
+        vertices.push_back({b + glm::vec3(s, h, s), glm::vec3(1, 0, 0), glm::vec3(1), glm::vec2(uStart, vEnd)});
     }
 
     indices.push_back(startIndex + 0);

@@ -1,4 +1,9 @@
-﻿#include"../Header Files/shaderClass.h"
+﻿#include <glad/gl.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <cerrno>
+#include"../Header Files/shaderClass.h"
 
 // Reads a text file and outputs a string with everything in the text file
 std::string get_file_contents(const char* filename)

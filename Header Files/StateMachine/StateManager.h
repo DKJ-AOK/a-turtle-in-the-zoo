@@ -13,7 +13,8 @@ private:
     explicit StateManager(GameContext& ctx);
 
     void ChangeState(std::unique_ptr<GameState> newState);
-    void Update(float deltaTime);
+    void Update(float deltaTime) const;
+    void DrawUI() const;
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_STATEMANAGER_H

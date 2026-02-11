@@ -1,6 +1,8 @@
-﻿#include"../Header Files/Texture.h"
+﻿#include <glad/gl.h>
+#include<stb_image.h>
+#include"../Header Files/Texture.h"
 
-Texture::Texture(const char* image, const char* texType, const GLuint slot, const GLenum format, const GLenum pixelType)
+Texture::Texture(const char* image, const char* texType, const unsigned int slot, const unsigned int format, const unsigned int pixelType)
 {
 	// Assigns the type of the texture ot the texture object
 	type = texType;
@@ -43,7 +45,7 @@ Texture::Texture(const char* image, const char* texType, const GLuint slot, cons
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::texUnit(const Shader& shader, const char* uniform, const GLuint unit)
+void Texture::texUnit(const Shader& shader, const char* uniform, const unsigned int unit)
 {
 	// Gets the location of the uniform
 	GLuint texUni = glGetUniformLocation(shader.ID, uniform);

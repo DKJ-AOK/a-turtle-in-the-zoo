@@ -6,6 +6,21 @@
 #include "World.h"
 
 class PlayerController {
+private:
+    void handleGroundMovement(float deltaTime);
+    void handleFlyingMovement(float deltaTime);
+    void handlePlayerActions() const;
+    void checkGodModeState();
+    void applyPhysics(float deltaTime);
+
+    // Player Static Variables
+    const float playerHeight = 1.90f;
+    const float playerWidth = 0.60f;
+    const float playerCenter = playerHeight / 2.0f;
+    const float playerEyeLevel = playerHeight - 0.15f;
+    const float playerEyeLevelFromCenter = playerEyeLevel - playerCenter;
+    glm::vec3 playerHalfExtent = glm::vec3(playerWidth / 2.0f, playerCenter, playerWidth / 2.0f);
+
     public:
     Camera camera;
     InputManager& inputManager;
@@ -28,6 +43,13 @@ class PlayerController {
     float nearPlane = 0.1f;
     float farPlane = 100.0f;
 
+    // Player Static Variables
+    const float maxReachDistance = 5.0f;
+    const glm::vec3 PlayerHeightVec3 = glm::vec3(0, playerHeight, 0);
+    const glm::vec3 PlayerCenterVec3 = glm::vec3(0, playerCenter, 0);
+    const glm::vec3 PlayerEyeVec3 = glm::vec3(0, playerEyeLevel, 0);
+    const glm::vec3 PlayerEyeFromCenterVec3 = PlayerEyeVec3 - PlayerCenterVec3;
+
     // God Mode
     bool isGodModeActive = false;
 
@@ -37,14 +59,6 @@ class PlayerController {
     world(worldRef){};
 
     void update(float deltaTime);
-
-private:
-    glm::vec3 playerHalfExtent = glm::vec3(0.25f, 0.95f, 0.25f);
-    void handleGroundMovement(float deltaTime);
-    void handleFlyingMovement(float deltaTime);
-    void handlePlayerActions() const;
-    void checkGodModeState();
-    void applyPhysics(float deltaTime);
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H

@@ -11,12 +11,12 @@
 class Mesh {
 public:
     std::vector <Vertex> vertices;
-    std::vector <GLuint> indices;
+    std::vector <unsigned int> indices;
     std::vector <Texture> textures;
 
     VAO VAO;
 
-    Mesh(const std::vector <Vertex>& vertices, const std::vector <GLuint>& indices, const std::vector<Texture>& textures);
+    Mesh(const std::vector <Vertex>& vertices, const std::vector <unsigned int>& indices, const std::vector<Texture>& textures);
 
     void Draw(Shader &shader, Camera &camera);
 };

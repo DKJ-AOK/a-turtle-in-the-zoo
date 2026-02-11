@@ -1,4 +1,5 @@
-﻿#include "../Header Files/World.h"
+﻿#include <glad/gl.h>
+#include "../Header Files/World.h"
 #include "../Header Files/Chunk.h"
 
 World::World(const std::uint32_t seed, const std::vector<Texture> &textures) : textures(textures), seed(seed) {
@@ -295,6 +296,7 @@ void World::workerLoop() {
     }
 }
 
+#pragma region Collision Related Functions
 bool World::checkCollision(const AABB &playerBox, AABB& cubeOutBox) const {
     // Find min/max Coordinates in grid-units
     const int minX = std::floor(playerBox.min.x / Chunk::BLOCK_SCALE);
@@ -349,11 +351,77 @@ bool World::intersect(const AABB &a, const AABB &b) {
 }
 
 AABB World::getBlockAABB(const int x, const int y, const int z) {
-    constexpr float cubeSize = Chunk::BLOCK_SCALE;
-
-    // We assume the cube is centered in its cell
-    const auto center = glm::vec3(x, y, z);
-    constexpr float half = cubeSize / 2.0f;
-
-    return { center - glm::vec3(half), center + glm::vec3(half) };
+    // En blok på (x,y,z) går fra (x,y,z) til (x+1, y+1, z+1)
+    const auto minCorner = glm::vec3(x, y, z);
+    const glm::vec3 maxCorner = minCorner + glm::vec3(Chunk::BLOCK_SCALE);
+    return { minCorner, maxCorner };;
 }
+#pragma endregion
+
+#pragma region Raycast Related Functions
+RaycastResult World::raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance) const {
+    RaycastResult result;
+
+    // At which block do we start at
+    glm::ivec3 currentPos = glm::floor(origin);
+
+    // The direction of the ray (+1 or -1)
+    glm::ivec3 step;
+    step.x = (direction.x > 0) ? 1 : -1;
+    step.y = (direction.y > 0) ? 1 : -1;
+    step.z = (direction.z > 0) ? 1 : -1;
+
+    // How far do we need to move, to hit the next grid line (X, Y, Z)
+    glm::vec3 tMax;
+    tMax.x = (direction.x > 0) ? (floor(origin.x + 1) - origin.x) / direction.x : (origin.x - floor(origin.x)) / -direction.x;
+    tMax.y = (direction.y > 0) ? (floor(origin.y + 1) - origin.y) / direction.y : (origin.y - floor(origin.y)) / -direction.y;
+    tMax.z = (direction.z > 0) ? (floor(origin.z + 1) - origin.z) / direction.z : (origin.z - floor(origin.z)) / -direction.z;
+
+    // How much does t change when we cross a whole block
+    glm::vec3 tDelta = glm::abs(1.0f / direction);
+
+    float distance = 0.0f;
+    glm::ivec3 faceNormal(0);
+
+    while (distance < maxDistance) {
+        // Check if the current block is solid
+        if (const auto blockTypeAtPos = getBlockTypeAtWorldPosition(currentPos);
+        std::ranges::all_of(Chunk::NO_COLLISION_BLOCKS, [&](const BlockType noCollisionBlock)
+        { return noCollisionBlock != blockTypeAtPos; })) {
+            result.hit = true;
+            result.blockPos = currentPos;
+            result.normal = faceNormal;
+            result.distance = distance;
+            return result;
+        }
+
+        // Find the axis where we hit the next grid line first
+        if (tMax.x < tMax.y) {
+            if (tMax.x < tMax.z) {
+                distance = tMax.x;
+                tMax.x += tDelta.x;
+                currentPos.x += step.x;
+                faceNormal = glm::ivec3(-step.x,0, 0); // We hit an X-side.
+            } else {
+                distance = tMax.z;
+                tMax.z += tDelta.z;
+                currentPos.z += step.z;
+                faceNormal = glm::ivec3(0,0,-step.z); // We hit an Z-side.
+            }
+        } else {
+            if (tMax.y < tMax.z) {
+                distance = tMax.y;
+                tMax.y += tDelta.y;
+                currentPos.y += step.y;
+                faceNormal = glm::ivec3(0,-step.y,0); // We hit an Y-side.
+            } else {
+                distance = tMax.z;
+                tMax.z += tDelta.z;
+                currentPos.z += step.z;
+                faceNormal = glm::ivec3(0,0,-step.z); // We hit an Z-side.
+            }
+        }
+    }
+    return result; // We hit nothing within the range.
+}
+#pragma endregion

@@ -1,4 +1,5 @@
-﻿#include "../Header Files/VBO.h"
+﻿#include <glad/gl.h>
+#include "../Header Files/VBO.h"
 
 VBO::VBO(const std::vector<Vertex>& vertices) {
     // Generate the VBO with only 1 object each

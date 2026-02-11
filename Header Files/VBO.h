@@ -1,9 +1,8 @@
 ﻿#ifndef A_TURTLE_IN_THE_ZOO_VBO_H
 #define A_TURTLE_IN_THE_ZOO_VBO_H
 
-#include <vector>
-#include <glad/gl.h>
 #include <glm/glm.hpp>
+#include <vector>
 
 struct Vertex {
     glm::vec3 position;
@@ -14,7 +13,7 @@ struct Vertex {
 
 class VBO {
     public:
-        GLuint ID{};
+        unsigned int ID{};
     VBO(const std::vector<Vertex>& vertices);
     VBO(const std::vector<glm::mat4>& matrices);
 
