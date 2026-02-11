@@ -13,7 +13,7 @@
 #include "../../Header Files/PlayerController.h"
 
 std::unique_ptr<MovementState> SneakingState::handleInput(PlayerController& player, InputManager& input) {
-    // Hvis vi ikke trykker sneak længere, gå tilbage til Walking eller Idle
+    // If Sneak Action keybind is not press, return to Walking
     if (!input.isActionActive(Action::SNEAK)) {
         return std::make_unique<WalkingState>();
     }
@@ -21,6 +21,6 @@ std::unique_ptr<MovementState> SneakingState::handleInput(PlayerController& play
 }
 
 void SneakingState::update(PlayerController& player, const float deltaTime) {
-    // Vi bruger en lavere hastighed, f.eks. 2.0f
+    // Use sneaking speed
     player.handleHorizontalMovement(deltaTime, player.sneakingSpeed);
 }
