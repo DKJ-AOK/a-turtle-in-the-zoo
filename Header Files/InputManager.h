@@ -16,6 +16,7 @@ enum Action {
     JUMP,
     WALK,
     SPRINT,
+    SNEAK,
     INTERACT,
     HIT,
     PLACE,
