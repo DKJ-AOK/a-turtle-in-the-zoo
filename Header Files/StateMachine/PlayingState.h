@@ -10,8 +10,8 @@ class PlayingState : public GameState {
 public:
     explicit PlayingState(GameContext& ctx) :
     GameState(ctx),
-    crosshairShader("C:/Users/Oetho/CLionProjects/a-turtle-in-the-zoo/Resource Files/Shaders/crosshair.vert", "C:/Users/Oetho/CLionProjects/a-turtle-in-the-zoo/Resource Files/Shaders/crosshair.frag"),
-    selectionBoxShader("C:/Users/Oetho/CLionProjects/a-turtle-in-the-zoo/Resource Files/Shaders/selection.vert", "C:/Users/Oetho/CLionProjects/a-turtle-in-the-zoo/Resource Files/Shaders/selection.frag"){}
+    crosshairShader("../Resource Files/Shaders/crosshair.vert", "../Resource Files/Shaders/crosshair.frag"),
+    selectionBoxShader("../Resource Files/Shaders/selection.vert", "../Resource Files/Shaders/selection.frag"){}
 
     void onEnter() override;
     void update(float deltaTime) override;
