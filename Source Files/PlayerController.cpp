@@ -5,11 +5,10 @@
 #include "../Header Files/HierarchicalStateMachine/MovementState.h"
 #include "../Header Files/HierarchicalStateMachine/IdleState.h"
 
-PlayerController::PlayerController(InputManager& inputManagerRef, World& worldRef, int screenWidth, int screenHeight)
+PlayerController::PlayerController(InputManager &inputManagerRef, World &worldRef, int screenWidth, int screenHeight)
     : camera(screenWidth, screenHeight, glm::vec3(0.0f, 30.0f, 5.0f)),
       inputManager(inputManagerRef),
-      world(worldRef)
-{
+      world(worldRef) {
     // Initialize Movement State
     currentMoveState = std::make_unique<IdleState>();
 }
@@ -79,12 +78,13 @@ void PlayerController::applyPhysics(const float deltaTime) {
     const AABB actualBox = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
 
     if (AABB cubeBox; world.checkCollision(actualBox, cubeBox)) {
-        if (verticalVelocity < 0) { // Falder ned i gulv
+        if (verticalVelocity < 0) {
+            // Falder ned i gulv
             camera.Position.y = cubeBox.max.y;
             verticalVelocity = 0.0f;
             isGrounded = true;
-        }
-        else if (verticalVelocity > 0) { // Rammer loftet
+        } else if (verticalVelocity > 0) {
+            // Rammer loftet
             camera.Position.y = cubeBox.min.y - playerCenter - 0.001f;
             verticalVelocity = 0.0f;
         }
@@ -117,10 +117,10 @@ void PlayerController::handleFlyingMovement(const float deltaTime) {
     const glm::vec3 forward = camera.Forward * velocity;
     const glm::vec3 right = camera.Right * velocity;
 
-    if (inputManager.isActionActive(Action::MOVE_FORWARD))  camera.Position += forward;
+    if (inputManager.isActionActive(Action::MOVE_FORWARD)) camera.Position += forward;
     if (inputManager.isActionActive(Action::MOVE_BACKWARD)) camera.Position -= forward;
-    if (inputManager.isActionActive(Action::MOVE_LEFT))     camera.Position -= right;
-    if (inputManager.isActionActive(Action::MOVE_RIGHT))    camera.Position += right;
+    if (inputManager.isActionActive(Action::MOVE_LEFT)) camera.Position -= right;
+    if (inputManager.isActionActive(Action::MOVE_RIGHT)) camera.Position += right;
 }
 
 void PlayerController::handlePlayerActions() const {
@@ -158,10 +158,10 @@ glm::vec3 PlayerController::calculateMoveDir() const {
     const glm::vec3 forward = glm::normalize(glm::vec3(camera.Forward.x, 0.0f, camera.Forward.z));
     const glm::vec3 right = camera.Right;
 
-    if (inputManager.isActionActive(Action::MOVE_FORWARD))  moveDir += forward;
+    if (inputManager.isActionActive(Action::MOVE_FORWARD)) moveDir += forward;
     if (inputManager.isActionActive(Action::MOVE_BACKWARD)) moveDir -= forward;
-    if (inputManager.isActionActive(Action::MOVE_LEFT))     moveDir -= right;
-    if (inputManager.isActionActive(Action::MOVE_RIGHT))    moveDir += right;
+    if (inputManager.isActionActive(Action::MOVE_LEFT)) moveDir -= right;
+    if (inputManager.isActionActive(Action::MOVE_RIGHT)) moveDir += right;
 
     if (glm::length(moveDir) > 0.0f) {
         return glm::normalize(moveDir);
@@ -169,27 +169,45 @@ glm::vec3 PlayerController::calculateMoveDir() const {
     return glm::vec3(0.0f);
 }
 
-void PlayerController::handleHorizontalMovement(float deltaTime, float speed) {
+void PlayerController::handleHorizontalMovement(float deltaTime, float speed, const bool avoidEdges) {
     glm::vec3 moveDir = calculateMoveDir();
+    if (glm::length(moveDir) == 0.0f) return;
 
-    if (glm::length(moveDir) > 0.0f) {
-        glm::vec3 velocity = moveDir * speed * deltaTime;
+    const glm::vec3 velocity = moveDir * speed * deltaTime;
+    AABB hitBox;
 
-        // 1. X-movement with collision
-        camera.Position.x += velocity.x;
-        AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
-        AABB hitBox;
+    // 1. X-movement with collision
+    float prevX = camera.Position.x;
+    camera.Position.x += velocity.x;
+    if (avoidEdges && isGrounded && !isGroundAt(camera.Position))
+        camera.Position.x = prevX;
+    else {
+        const AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
         if (world.checkCollision(boxX, hitBox)) {
             if (velocity.x > 0) camera.Position.x = hitBox.min.x - playerHalfExtent.x - 0.01f;
             else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.01f;
         }
+    }
 
-        // 2. Z-movement with collision
-        camera.Position.z += velocity.z;
-        AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
+    // 2. Z-movement with collision
+    float prevZ = camera.Position.z;
+    camera.Position.z += velocity.z;
+    if (avoidEdges && isGrounded && !isGroundAt(camera.Position))
+        camera.Position.z = prevZ;
+    else {
+        const AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
         if (world.checkCollision(boxZ, hitBox)) {
             if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.01f;
             else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.01f;
         }
     }
+}
+
+bool PlayerController::isGroundAt(const glm::vec3 pos) const {
+    // We check a small box under the point received
+    // We use a very thin AABB (0.05 in height)
+    const AABB groundCheck = AABB::fromCenter(pos + glm::vec3(0.0f, -0.05f, 0.0f),
+                                              glm::vec3(playerHalfExtent.x, 0.05f, playerHalfExtent.z));
+    AABB temp;
+    return world.checkCollision(groundCheck, temp);
 }
