@@ -176,30 +176,36 @@ void PlayerController::handleHorizontalMovement(float deltaTime, float speed, co
     const glm::vec3 velocity = moveDir * speed * deltaTime;
     AABB hitBox;
 
-    // 1. X-movement with collision
+    // 1. X-Movement
     float prevX = camera.Position.x;
     camera.Position.x += velocity.x;
-    if (avoidEdges && isGrounded && !isGroundAt(camera.Position))
+
+    // Edge check (Sneaking)
+    if (avoidEdges && isGrounded && !isGroundAt(camera.Position)) {
         camera.Position.x = prevX;
-    else {
-        const AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
-        if (world.checkCollision(boxX, hitBox)) {
-            if (velocity.x > 0) camera.Position.x = hitBox.min.x - playerHalfExtent.x - 0.01f;
-            else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.01f;
-        }
     }
 
-    // 2. Z-movement with collision
+    // Wall check (Always runs for safety reasons)
+    AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
+    if (world.checkCollision(boxX, hitBox)) {
+        if (velocity.x > 0) camera.Position.x = hitBox.min.x - playerHalfExtent.x - 0.01f;
+        else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.01f;
+    }
+
+    // 2. Z-Movement
     float prevZ = camera.Position.z;
     camera.Position.z += velocity.z;
-    if (avoidEdges && isGrounded && !isGroundAt(camera.Position))
+
+    // Edge check (Sneaking)
+    if (avoidEdges && isGrounded && !isGroundAt(camera.Position)) {
         camera.Position.z = prevZ;
-    else {
-        const AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
-        if (world.checkCollision(boxZ, hitBox)) {
-            if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.01f;
-            else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.01f;
-        }
+    }
+
+    // Wall check (Always running)
+    AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
+    if (world.checkCollision(boxZ, hitBox)) {
+        if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.01f;
+        else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.01f;
     }
 }
 
