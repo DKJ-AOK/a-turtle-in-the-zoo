@@ -1,6 +1,6 @@
-#include "../../Header Files/StateMachine/StateManager.h"
-#include "../../Header Files/StateMachine/GameState.h" // Nu inkluderer vi den her, hvor den skal bruges
-#include "../../Header Files/StateMachine/GameContext.h"
+#include "../../Header Files/FiniteStateMachine/StateManager.h"
+#include "../../Header Files/FiniteStateMachine/GameState.h" // Nu inkluderer vi den her, hvor den skal bruges
+#include "../../Header Files/FiniteStateMachine/GameContext.h"
 
 StateManager::StateManager(GameContext& ctx) : gameContext(ctx) {}
 

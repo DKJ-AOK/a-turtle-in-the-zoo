@@ -5,9 +5,10 @@
 #include "Physics.h"
 #include "World.h"
 
+class MovementState;
+
 class PlayerController {
 private:
-    void handleGroundMovement(float deltaTime);
     void handleFlyingMovement(float deltaTime);
     void handlePlayerActions() const;
     void checkGodModeState();
@@ -20,6 +21,9 @@ private:
     const float playerEyeLevel = playerHeight - 0.15f;
     const float playerEyeLevelFromCenter = playerEyeLevel - playerCenter;
     glm::vec3 playerHalfExtent = glm::vec3(playerWidth / 2.0f, playerCenter, playerWidth / 2.0f);
+
+    // Player States
+    std::unique_ptr<MovementState> currentMoveState;
 
     public:
     Camera camera;
@@ -34,6 +38,7 @@ private:
     float groundLevel = 0.0f;
     float walkingSpeed = 5.0f;
     float sprintSpeed = 10.0f;
+    float sneakingSpeed = 3.0f;
     float flyingSpeed = 20.0f;
     float flyingSprintSpeed = 100.0f;
 
@@ -53,12 +58,12 @@ private:
     // God Mode
     bool isGodModeActive = false;
 
-    PlayerController(InputManager& inputManagerRef, World& worldRef, int screenWidth, int screenHeight)
-    : camera(screenWidth, screenHeight, glm::vec3(0.0f, 30.0f, 5.0f)),
-    inputManager(inputManagerRef),
-    world(worldRef){};
+    PlayerController(InputManager& inputManagerRef, World& worldRef, int screenWidth, int screenHeight);
+    ~PlayerController();
 
     void update(float deltaTime);
+    [[nodiscard]] glm::vec3 calculateMoveDir() const;
+    void handleHorizontalMovement(float deltaTime, float speed);
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H

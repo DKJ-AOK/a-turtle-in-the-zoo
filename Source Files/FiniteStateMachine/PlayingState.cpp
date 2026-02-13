@@ -1,7 +1,7 @@
 #include <glad/gl.h>
 #include <iostream>
 
-#include "../../Header Files/StateMachine/PlayingState.h"
+#include "../../Header Files/FiniteStateMachine/PlayingState.h"
 #include "../../Header Files/InputManager.h"
 #include "../../Header Files/PlayerController.h"
 #include "../../Header Files/VBO.h"
