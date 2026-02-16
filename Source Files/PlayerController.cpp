@@ -61,7 +61,7 @@ void PlayerController::checkGodModeState() {
 
 void PlayerController::applyPhysics(const float deltaTime) {
     // 1. JUMP LOGIC
-    if (inputManager.isActionJustPressed(Action::JUMP) && isGrounded) {
+    if (inputManager.isActionActive(Action::JUMP) && isGrounded) {
         verticalVelocity = jumpForce;
         isGrounded = false;
     }
@@ -79,12 +79,12 @@ void PlayerController::applyPhysics(const float deltaTime) {
 
     if (AABB cubeBox; world.checkCollision(actualBox, cubeBox)) {
         if (verticalVelocity < 0) {
-            // Falder ned i gulv
+            // Falls into the floor
             camera.Position.y = cubeBox.max.y;
             verticalVelocity = 0.0f;
             isGrounded = true;
         } else if (verticalVelocity > 0) {
-            // Rammer loftet
+            // Hits the ceiling
             camera.Position.y = cubeBox.min.y - playerCenter - 0.001f;
             verticalVelocity = 0.0f;
         }
@@ -180,11 +180,6 @@ void PlayerController::handleHorizontalMovement(float deltaTime, float speed, co
     float prevX = camera.Position.x;
     camera.Position.x += velocity.x;
 
-    // Edge check (Sneaking)
-    if (avoidEdges && isGrounded && !isGroundAt(camera.Position)) {
-        camera.Position.x = prevX;
-    }
-
     // Wall check (Always runs for safety reasons)
     AABB boxX = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
     if (world.checkCollision(boxX, hitBox)) {
@@ -192,20 +187,25 @@ void PlayerController::handleHorizontalMovement(float deltaTime, float speed, co
         else camera.Position.x = hitBox.max.x + playerHalfExtent.x + 0.01f;
     }
 
+    // Edge check (Sneaking)
+    if (avoidEdges && isGrounded && !isGroundAt(camera.Position)) {
+        camera.Position.x = prevX;
+    }
+
     // 2. Z-Movement
     float prevZ = camera.Position.z;
     camera.Position.z += velocity.z;
-
-    // Edge check (Sneaking)
-    if (avoidEdges && isGrounded && !isGroundAt(camera.Position)) {
-        camera.Position.z = prevZ;
-    }
 
     // Wall check (Always running)
     AABB boxZ = AABB::fromCenter(camera.Position + PlayerCenterVec3, playerHalfExtent);
     if (world.checkCollision(boxZ, hitBox)) {
         if (velocity.z > 0) camera.Position.z = hitBox.min.z - playerHalfExtent.z - 0.01f;
         else camera.Position.z = hitBox.max.z + playerHalfExtent.z + 0.01f;
+    }
+
+    // Edge check (Sneaking)
+    if (avoidEdges && isGrounded && !isGroundAt(camera.Position)) {
+        camera.Position.z = prevZ;
     }
 }
 
