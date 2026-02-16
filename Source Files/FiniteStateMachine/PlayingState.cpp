@@ -10,9 +10,9 @@ void PlayingState::onEnter() {
     glfwSetInputMode(gameContext.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     constexpr float crosshairVertices[] = {
-        // En vandret linje og en lodret linje omkring (0,0)
-        -0.02f, 0.0f, 0.02f, 0.0f, // Vandret
-        0.0f, -0.03f, 0.0f, 0.03f // Lodret (lidt længere pga. aspect ratio)
+        // A horizontal line and a vertical line around (0,0)
+        -0.02f, 0.0f, 0.02f, 0.0f, // Horizontal
+        0.0f, -0.03f, 0.0f, 0.03f // Vertical (slightly longer due to aspect ratio)
     };
 
     glGenVertexArrays(1, &crosshairVAO);
@@ -27,14 +27,14 @@ void PlayingState::onEnter() {
 
     constexpr float selectionBoxVertices[] = {
         // Front face
-        0.0f, 0.0f, 0.0f, // 0: Bund-Venstre-Bag
-        1.0f, 0.0f, 0.0f, // 1: Bund-Højre-Bag
-        1.0f, 1.0f, 0.0f, // 2: Top-Højre-Bag
-        0.0f, 1.0f, 0.0f, // 3: Top-Venstre-Bag
-        0.0f, 0.0f, 1.0f, // 4: Bund-Venstre-Front
-        1.0f, 0.0f, 1.0f, // 5: Bund-Højre-Front
-        1.0f, 1.0f, 1.0f, // 6: Top-Højre-Front
-        0.0f, 1.0f, 1.0f // 7: Top-Venstre-Front
+        0.0f, 0.0f, 0.0f, // 0: Bottom-Left-Back
+        1.0f, 0.0f, 0.0f, // 1: Bottom-Right-Back
+        1.0f, 1.0f, 0.0f, // 2: Top-Right-Back
+        0.0f, 1.0f, 0.0f, // 3: Top-Left-Back
+        0.0f, 0.0f, 1.0f, // 4: Bottom-Left-Front
+        1.0f, 0.0f, 1.0f, // 5: Bottom-Right-Front
+        1.0f, 1.0f, 1.0f, // 6: Top-Right-Front
+        0.0f, 1.0f, 1.0f // 7: Top-Left-Front
     };
 
     unsigned int selectionBoxIndices[] = {

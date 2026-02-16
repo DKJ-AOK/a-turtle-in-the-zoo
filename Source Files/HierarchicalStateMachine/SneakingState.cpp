@@ -13,14 +13,23 @@
 #include "../../Header Files/PlayerController.h"
 
 std::unique_ptr<MovementState> SneakingState::handleInput(PlayerController& player, InputManager& input) {
-    // If Sneak Action keybind is not press, return to Walking
+    const glm::vec3 moveDir = player.calculateMoveDir();
+
+    // If Sneak Action keybind is not press, return to Walking if moving otherwise Idle
     if (!input.isActionActive(Action::SNEAK)) {
-        return std::make_unique<WalkingState>();
+        if (glm::length(moveDir) > 0.0f) return std::make_unique<WalkingState>();
+        return std::make_unique<IdleState>();
     }
+
+    // If no movement, return Idle
+    if (glm::length(moveDir) == 0.0f) {
+        return std::make_unique<IdleState>();
+    }
+
     return nullptr;
 }
 
 void SneakingState::update(PlayerController& player, const float deltaTime) {
-    // Use sneaking speed
-    player.handleHorizontalMovement(deltaTime, player.sneakingSpeed);
+    constexpr auto avoidEdges = true;
+    player.handleHorizontalMovement(deltaTime, player.sneakingSpeed, avoidEdges);
 }

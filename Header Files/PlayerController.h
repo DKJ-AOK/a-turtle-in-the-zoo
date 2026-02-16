@@ -63,7 +63,8 @@ private:
 
     void update(float deltaTime);
     [[nodiscard]] glm::vec3 calculateMoveDir() const;
-    void handleHorizontalMovement(float deltaTime, float speed);
+    void handleHorizontalMovement(float deltaTime, float speed, bool avoidEdges = false);
+    [[nodiscard]] bool isGroundAt(glm::vec3 pos) const;
 };
 
 #endif //A_TURTLE_IN_THE_ZOO_PLAYERCONTROLLER_H
